@@ -1,0 +1,16 @@
+@import './variables.scss';
+@import './z-index.scss';
+@import './animations.scss';
+@import './components/terminal.scss';
+@import './components/resize-handle.scss';
+@import './components/code.scss';
+@import './components/editor.scss';
+@import './components/toast.scss';
+@import './components/background-animation.css';
+@import './components/animations.css';
+
+html,
+body {
+  height: 100%;
+  width: 100%;
+}
