@@ -18,6 +18,12 @@ const messageParser = new StreamingMessageParser({
       logger.trace('onArtifactClose');
 
       workbenchStore.updateArtifact(data, { closed: true });
+      
+      // Set view to 'preview' when artifact generation is complete
+      const previews = workbenchStore.previews.get();
+      if (previews.length > 0) {
+        workbenchStore.currentView.set('preview');
+      }
     },
     onActionOpen: (data) => {
       logger.trace('onActionOpen', data.action);

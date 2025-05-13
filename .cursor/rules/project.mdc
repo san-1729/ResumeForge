@@ -1,0 +1,447 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+# MCG - My Career Growth Project Guide
+
+This document provides guidance on the development workflow for MCG (My Career Growth), our AI-powered resume and portfolio builder. It covers project organization, workflow practices, and how to use Cursor effectively with this project.
+
+## Project Overview
+
+MCG is built on top of the bolt.new repository, helping users create professional resumes through an AI chat interface. The application features:
+
+- A three-panel layout with navigation, chat, and preview
+- AI-powered resume generation based on user input
+- Real-time preview and customization
+- WebContainer technology to render resume templates
+- ATS optimization recommendations
+- Three.js background animations for visual appeal
+- Export capabilities for resumes
+
+## Core Technology Stack
+
+- **Framework**: Remix (React-based)
+- **Styling**: Tailwind CSS
+- **State Management**: Nanostores
+- **LLM Integration**: Claude 3.5 Sonnet via Anthropic API
+- **Code Execution**: WebContainer API
+- **Animation**: Three.js, Framer Motion
+- **UI Components**: Custom components with Tailwind
+
+## Project Structure
+
+```
+bolt.new/
+  ├── app/
+  │   ├── components/
+  │   │   ├── chat/         # Chat interface and message handling
+  │   │   ├── editor/       # Code editor components (modified for resume)
+  │   │   ├── header/       # Application header and branding
+  │   │   ├── sidebar/      # Navigation sidebar and history
+  │   │   ├── ui/           # Shared UI components
+  │   │   └── workbench/    # Preview panel and file handling
+  │   ├── lib/
+  │   │   ├── .server/      # Server-side code (LLM integration)
+  │   │   │   └── llm/      # LLM prompt engineering and API integration
+  │   │   ├── hooks/        # React hooks for functionality
+  │   │   ├── persistence/  # Local storage and history management
+  │   │   ├── runtime/      # Action runner and message parser
+  │   │   ├── stores/       # State management with nanostores
+  │   │   └── webcontainer/ # WebContainer integration
+  │   ├── routes/           # Application routes (Remix)
+  │   ├── styles/           # Global styles and themes
+  │   ├── types/            # TypeScript type definitions
+  │   └── utils/            # Utility functions
+  ├── functions/            # Edge functions for deployment
+  └── public/               # Static assets
+```
+
+## Key Files and Their Roles
+
+1. **System Configuration**:
+   - `app/lib/.server/llm/prompts.ts` - Contains the system prompt for resume generation
+   - `app/lib/.server/llm/model.ts` - LLM model configuration (Claude)
+
+2. **UI Components**:
+   - `app/components/chat/BaseChat.tsx` - Main chat interface with example prompts
+   - `app/components/ui/ResumeBackground.client.tsx` - Three.js background animation
+   - `app/components/workbench/Preview.tsx` - Resume preview iframe
+
+3. **Core Logic**:
+   - `app/lib/runtime/message-parser.ts` - Parses AI responses for artifacts
+   - `app/lib/runtime/action-runner.ts` - Executes file and shell actions
+   - `app/routes/api.chat.ts` - API endpoint for chat interactions
+
+4. **State Management**:
+   - `app/lib/stores/workbench.ts` - Manages workbench state (files, preview)
+   - `app/lib/stores/chat.ts` - Manages chat state and history
+
+## Application Flow
+
+1. **User Interaction Flow**:
+   - User visits the landing page and sees the initial UI with example prompts
+   - User enters a prompt (e.g., "Create a professional software engineer resume")
+   - The prompt is sent to the AI via the chat API
+   - AI generates HTML/CSS/JS files wrapped in mcgArtifact tags
+   - Message parser identifies and processes these artifacts
+   - Action runner creates files in WebContainer and starts a dev server
+   - Preview panel displays the resume in an iframe
+   - User can iterate with additional prompts and feedback
+
+2. **Technical Flow**:
+   - `_index.tsx` → `BaseChat.tsx` → `Chat.client.tsx` → `api.chat.ts`
+   - `api.chat.ts` → Claude API → `message-parser.ts` → `action-runner.ts`
+   - `action-runner.ts` → WebContainer → Dev Server → `Preview.tsx`
+
+## Development Workflow
+
+### Getting Started
+
+1. **Environment Setup**:
+   - Clone the repository
+   - Run `npm install` in the bolt.new directory
+   - Create a `.env` file with your Anthropic API key:
+     ```
+     ANTHROPIC_API_KEY=your_api_key_here
+     ```
+   - Run `npm run dev` to start the development server
+
+2. **Making Changes**:
+   - UI components are in the `app/components` directory
+   - LLM prompt engineering is in `app/lib/.server/llm/prompts.ts`
+   - Styles use Tailwind CSS classes directly in components
+
+### Common Tasks
+
+1. **Modifying the System Prompt**:
+   - Edit `app/lib/.server/llm/prompts.ts` to adjust resume guidance
+   - Update example artifacts to demonstrate new resume styles or formats
+
+2. **Updating the UI**:
+   - For layout changes, modify components in `app/components`
+   - For styling, use Tailwind classes directly in components
+   - For animations, edit `ResumeBackground.client.tsx` or use Framer Motion
+
+3. **Extending Functionality**:
+   - To add new resume features, update the system prompt
+   - To add UI features, add components and update the appropriate stores
+
+## Coding Standards
+
+1. **Component Structure**:
+   - Use `.client.tsx` suffix for client-only components
+   - Follow React best practices (hooks, functional components)
+   - Maintain clean separation between UI and logic
+
+2. **Styling Guidelines**:
+   - Use Tailwind CSS classes directly in components
+   - Follow the existing color scheme with MCG branding
+   - Maintain responsive design for all components
+
+3. **State Management**:
+   - Use nanostores for global state
+   - Use React hooks for component-level state
+   - Follow the pattern in existing stores
+
+## Testing
+
+1. **Manual Testing**:
+   - Test prompt handling and resume generation
+   - Verify that all UI elements work correctly
+   - Test the application on different screen sizes
+
+2. **Potential Improvements**:
+   - Add automated tests for components
+   - Add integration tests for the AI response flow
+
+## Deployment
+
+The project is configured for deployment on Cloudflare Pages with:
+   - Remix framework
+   - Cloudflare Functions for API endpoints
+   - Edge-optimized runtime
+
+## Additional Resources
+
+For deeper understanding of the technologies used:
+   - Remix Documentation: https://remix.run/docs
+   - WebContainer API: https://webcontainers.io/
+   - Anthropic Claude API: https://docs.anthropic.com/
+   - Three.js Documentation: https://threejs.org/docs/
+
+## Welcome to MCG (My Career Growth)!
+
+Think of me as your primary guide and AI partner for the MCG project. This document is your comprehensive handbook. Your goal is to become proficient in developing features for MCG, an AI-powered resume builder designed to help users create professional, ATS-optimized resumes.
+
+MCG is an adaptation of the `stackblitz/bolt.new` repository. We've retained its core three-panel layout (navigation, chat, preview) and WebContainer technology but have repurposed it for resume generation instead of general code execution.
+
+### 1. Core Technologies You Must Master
+
+Your effectiveness on this project hinges on your understanding and correct application of these technologies:
+
+- **Framework**: Remix (React-based). You need to understand its routing, data handling (loaders/actions), and component model.
+- **Styling**: Tailwind CSS. This is the *primary* styling method. All UI styling will be done with Tailwind utility classes.
+- **State Management**: Nanostores for global application state and React Hooks (`useState`, `useEffect`, `useContext`, `useReducer`) for local component state.
+- **LLM Integration**: We use Claude 3.5 Sonnet (via Anthropic API) for AI-powered resume generation. You won't directly call the API, but you'll interact with its output via the chat interface and the `<mcgArtifact>` system.
+- **Code Execution Environment**: WebContainer API is used to create an in-browser environment where the AI-generated resume files (HTML, CSS, JS) are placed and a dev server (usually Vite) is run to preview the resume.
+- **Animation**: Three.js for the background animation (`ResumeBackground.client.tsx`) and Framer Motion for other complex UI animations. Simpler transitions use Tailwind CSS.
+- **UI Components**: Custom React components are built using Tailwind CSS. You will be creating and modifying these.
+
+### 2. Getting Started: Your First Steps
+
+Follow these steps precisely to set up your development environment:
+
+1.  **Clone the Repository**: If you haven't already, clone the project to your local machine.
+2.  **Navigate to the Project Directory**: Open your terminal and `cd` into the `bolt.new/` directory within the cloned project.
+3.  **Install Dependencies**: Run `npm install`. This will install all necessary packages defined in `package.json`.
+4.  **Set Up Environment Variables**: 
+    *   Create a new file named `.env` in the `bolt.new/` directory.
+    *   Add your Anthropic API key to this file like so:
+        ```
+        ANTHROPIC_API_KEY=your_anthropic_api_key_here
+        ```
+    *   Replace `your_anthropic_api_key_here` with the actual API key provided to you.
+5.  **Start the Development Server**: Run `npm run dev`. This will start the Remix development server.
+6.  **Open in Browser**: Once the server starts (it will typically tell you the address, often `http://localhost:3000`), open this URL in your web browser to see the MCG application.
+
+### 3. Project Structure Overview: Where Everything Lives
+
+Understanding this structure is critical for navigation and knowing where to place new code. The primary application code is within `bolt.new/app/`.
+
+```text
+bolt.new/
+└── app/
+    ├── root.tsx                 # Root Remix component, defines global layout and context
+    ├── entry.client.tsx         # Client-side entry point for Remix
+    ├── entry.server.tsx         # Server-side entry point for Remix
+    ├── components/              # **KEY DIRECTORY**: All UI components reside here
+    │   ├── chat/                # Components for the chat interface
+    │   │   ├── Artifact.tsx
+    │   │   ├── AssistantMessage.tsx
+    │   │   ├── BaseChat.tsx       # Core presentational UI for chat
+    │   │   ├── BaseChat.module.scss
+    │   │   ├── Chat.client.tsx    # Main logic for chat interaction, message handling
+    │   │   ├── CodeBlock.module.scss
+    │   │   ├── CodeBlock.tsx
+    │   │   ├── Markdown.module.scss
+    │   │   ├── Markdown.tsx
+    │   │   ├── Messages.client.tsx # Renders the list of messages
+    │   │   ├── SendButton.client.tsx
+    │   │   └── UserMessage.tsx
+    │   ├── editor/              # Original editor components (less focus for MCG)
+    │   │   └── codemirror/
+    │   │       ├── CodeMirrorEditor.tsx # The editor itself
+    │   │       └── ... (other CodeMirror related files)
+    │   ├── header/              # Application header component
+    │   │   ├── Header.tsx
+    │   │   └── HeaderActionButtons.client.tsx
+    │   ├── sidebar/             # Navigation sidebar and history components
+    │   │   ├── HistoryItem.tsx
+    │   │   ├── Menu.client.tsx
+    │   │   └── date-binning.ts
+    │   ├── ui/                  # Shared, generic UI elements (buttons, dialogs, etc.)
+    │   │   ├── Dialog.tsx
+    │   │   ├── IconButton.tsx
+    │   │   ├── ResumeBackground.client.tsx # The Three.js background
+    │   │   └── ... (other UI elements)
+    │   └── workbench/           # Components for the preview panel and file display
+    │       ├── EditorPanel.tsx    # Panel that might show resume code
+    │       ├── FileTree.tsx       # For displaying file structure if needed
+    │       ├── Preview.tsx        # **KEY COMPONENT**: Renders the resume preview iframe
+    │       ├── Workbench.client.tsx # Manages workbench tabs and state
+    │       └── terminal/          # Terminal component (if used)
+    │           └── Terminal.tsx
+    ├── lib/                     # Utility libraries, hooks, server-side logic, stores
+    │   ├── .server/             # Server-side only code
+    │   │   └── llm/             # **KEY DIRECTORY**: LLM interaction logic
+    │   │       ├── prompts.ts     # **CRITICAL FILE**: System prompt for the AI
+    │   │       ├── model.ts       # LLM model configuration
+    │   │       ├── stream-text.ts # Handles streaming text from LLM
+    │   │       └── ... (API key, constants)
+    │   ├── hooks/               # Custom React hooks (e.g., useMessageParser)
+    │   ├── persistence/         # Local storage and history management (e.g., useChatHistory)
+    │   ├── runtime/             # Core runtime logic for AI interaction
+    │   │   ├── message-parser.ts # **KEY FILE**: Parses AI responses for <mcgArtifact> tags
+    │   │   ├── action-runner.ts # **KEY FILE**: Executes actions defined in artifacts
+    │   │   └── ...
+    │   ├── stores/              # **KEY DIRECTORY**: Nanostores for global state management
+    │   │   ├── chat.ts          # Chat-related global state
+    │   │   ├── workbench.ts     # Workbench/preview related global state
+    │   │   └── ...
+    │   └── webcontainer/        # WebContainer API integration logic
+    │       └── index.ts         # Main WebContainer setup and utilities
+    ├── routes/                  # Application routes (Remix convention)
+    │   ├── _index.tsx           # Main landing page route (/)
+    │   ├── api.chat.ts          # **KEY ROUTE**: API endpoint for chat interactions
+    │   └── ...
+    ├── styles/                  # Global styles and Tailwind configuration
+    │   └── index.scss
+    ├── types/                   # TypeScript type definitions for the project
+    └── utils/                   # General utility functions used across the application
+    functions/                   # Cloudflare Pages functions (for deployment)
+    public/                      # Static assets (images, fonts, etc.)
+```
+
+### 4. Key Files and Their Roles: Your Go-To References
+
+Beyond the structure, you must understand what these specific files do:
+
+1.  **System Prompt & LLM Config**: 
+    *   `app/lib/.server/llm/prompts.ts`: This is the **master instruction set** for the AI. Any changes to the AI's core behavior, resume generation style, or artifact structure start here. You will edit this when refining AI capabilities.
+    *   `app/lib/.server/llm/model.ts`: Configures which LLM model (Claude 3.5 Sonnet) is used.
+2.  **Core UI Components**: 
+    *   `app/components/chat/Chat.client.tsx`: Orchestrates the client-side chat experience, including sending user prompts and handling AI responses.
+    *   `app/components/chat/BaseChat.tsx`: The presentational component for the chat, rendering messages and input fields.
+    *   `app/components/ui/ResumeBackground.client.tsx`: Implements the Three.js background animation.
+    *   `app/components/workbench/Preview.tsx`: Displays the AI-generated resume in an `<iframe>` by pointing to the WebContainer's dev server.
+3.  **Core Logic - AI Interaction**: 
+    *   `app/routes/api.chat.ts`: The Remix API route that receives user prompts from `Chat.client.tsx`, passes them to the LLM (via `streamText`), and streams the AI's response back.
+    *   `app/lib/runtime/message-parser.ts`: This crucial utility parses the AI's streamed response, looking for `<mcgArtifact>` and `<mcgAction>` tags to extract structured commands.
+    *   `app/lib/runtime/action-runner.ts`: Takes the parsed actions from `message-parser.ts` and executes them (e.g., writes files to the WebContainer, runs shell commands like `npm install` or `vite`).
+4.  **State Management**: 
+    *   `app/lib/stores/workbench.ts`: A Nanostore that manages the state of the workbench, such as the list of files in the WebContainer, the status of the preview server, and the preview URL.
+    *   `app/lib/stores/chat.ts`: A Nanostore for chat-specific global state, like whether the chat has started.
+
+### 5. Application Flow: How It All Works Together
+
+**A. User Interaction Flow (Simplified):**
+
+1.  You land on the page, see example prompts.
+2.  You type a resume request (e.g., "Create a resume for a software engineer").
+3.  Your prompt is sent to the AI.
+4.  The AI processes your request and generates files (HTML, CSS, JS for the resume) and commands (like `npm install`, `npm run dev`). These are wrapped in `<mcgArtifact>` tags.
+5.  These artifacts are processed: files are created in a virtual WebContainer environment, and commands are run there (e.g., a Vite dev server starts).
+6.  The preview panel shows your generated resume, live from the WebContainer's dev server.
+7.  You can then chat further to refine the resume.
+
+**B. Technical Flow (Simplified Path):**
+
+`app/routes/_index.tsx` (renders UI)
+   -> `app/components/chat/Chat.client.tsx` (handles your input, calls API)
+      -> `app/routes/api.chat.ts` (backend API, calls LLM)
+         -> LLM (Claude 3.5 Sonnet, guided by `prompts.ts`)
+            -> `app/routes/api.chat.ts` (streams response back)
+               -> `app/components/chat/Chat.client.tsx` (receives stream)
+                  -> `app/lib/runtime/message-parser.ts` (parses `<mcgArtifact>`s)
+                     -> `app/lib/runtime/action-runner.ts` (executes file/shell actions in WebContainer)
+                        -> WebContainer (runs dev server)
+                           -> `app/components/workbench/Preview.tsx` (displays resume in iframe)
+
+For a more detailed sequence diagram and step-by-step explanation, you can ask me: "Show me the detailed MCG application flow."
+
+### 6. Development Workflow: Your Day-to-Day
+
+**A. Making Changes:**
+
+*   **UI Components**: Most of your UI work will be in `app/components/`. You'll modify existing components or create new ones here.
+*   **LLM Prompt Engineering**: To change how the AI generates resumes (e.g., new sections, different styling instructions), you'll edit `app/lib/.server/llm/prompts.ts`.
+*   **Styling**: Use Tailwind CSS classes directly in your JSX components.
+
+**B. Common Tasks & How to Approach Them:**
+
+1.  **Modifying the System Prompt (`prompts.ts`)**: 
+    *   **Goal**: To change the AI's fundamental behavior, its knowledge about resumes, or the structure of its output.
+    *   **How**: Carefully edit the text within `app/lib/.server/llm/prompts.ts`. Pay close attention to the `<resume_guidelines>`, `<system_constraints>`, and `<artifact_info>` sections. If you add new capabilities, update the examples within the prompt too.
+    *   **Testing**: After changes, test thoroughly by sending various prompts to the AI and checking if its behavior and output match your new instructions.
+2.  **Updating the UI (e.g., adding a new button, changing a layout)**:
+    *   **Locate Component**: Find the relevant `.tsx` file in `app/components/`.
+    *   **Modify JSX**: Make structural changes in the JSX.
+    *   **Apply Tailwind**: Use Tailwind CSS classes for styling. Refer to `tailwind.config.js` for theme specifics (colors, spacing) and existing components for style patterns.
+    *   **Add Logic/State**: If needed, add React hooks for state (`useState`, `useEffect`) or event handlers. For global state, use Nanostores.
+3.  **Adding a New UI Component (e.g., a new type of card for resume sections)**:
+    *   **Create File**: Create a new `.client.tsx` (if it needs client-side interactivity) or `.tsx` file in the appropriate subdirectory of `app/components/` (e.g., `app/components/resume/NewCard.client.tsx`).
+    *   **Define Props**: Use a TypeScript interface for props.
+    *   **Write JSX & Tailwind**: Build the component structure and style it.
+    *   **Import & Use**: Import and use your new component where needed.
+4.  **Extending Functionality (e.g., adding a new resume export format)**:
+    *   **System Prompt First**: Often, new functionality starts by teaching the AI about it in `prompts.ts`. You might define new `<mcgAction>` types or instruct the AI on how to generate files for the new format.
+    *   **Update Parser/Runner (If needed)**: If you introduce truly new action types not covered by file/shell, `message-parser.ts` and `action-runner.ts` might need updates (this is advanced).
+    *   **Add UI**: Create any necessary UI components for the user to trigger or interact with the new functionality.
+
+### 7. The MCG Developer Mindset & Best Practices: Your Code of Conduct
+
+To be an effective developer on the MCG project, you must embody these principles and follow these Do's and Don'ts rigorously.
+
+**A. Core Mindset:**
+
+*   **User-Centric**: Your primary goal is to help users create excellent resumes. Every feature and change should be viewed through this lens.
+*   **ATS-Aware**: Understand that resumes need to be ATS-friendly. The AI is guided on this, but your UI and any direct resume manipulation logic should also respect this.
+*   **Detail-Oriented**: Small mistakes in prompts, component logic, or styling can lead to poor AI output or a confusing user experience. Be meticulous.
+*   **Proactive Learner**: Understand the WebContainer environment and its limitations. Be curious about how Remix, Tailwind, and Nanostores are used in this project.
+*   **Effective AI Collaborator**: Learn to write clear, specific prompts when asking me (the AI) for help. Provide sufficient context.
+
+**B. Critical Do's:**
+
+*   **DO** follow the coding standards outlined in this document and in `@frontend-rules` (accessible by typing `@frontend-rules` in chat).
+*   **DO** write clean, readable, and maintainable code. Future you (and your teammates) will appreciate it.
+*   **DO** use functional React components with hooks exclusively.
+*   **DO** prioritize Tailwind CSS for all styling. Only use SCSS modules as a last resort and with justification.
+*   **DO** manage state appropriately: Nanostores for global, React hooks for local.
+*   **DO** create small, modular, and reusable components whenever possible.
+*   **DO** test your changes thoroughly, both manually and by interacting with the AI to see how your changes affect its output and the user flow.
+*   **DO** ensure your UI is responsive and accessible (a11y).
+*   **DO** comment your code where the logic is non-obvious. However, prefer self-documenting code (clear variable/function names).
+*   **DO** keep your local branch up-to-date with the main branch to avoid complex merge conflicts.
+
+**C. Strict Don'ts:**
+
+*   **DON'T** introduce new complex state management libraries without team discussion and approval.
+*   **DON'T** deviate significantly from the established architectural patterns (Remix conventions, Nanostore usage, AI artifact flow) without strong reasons and discussion.
+*   **DON'T** write large, monolithic components. Break them down.
+*   **DON'T** use inline styles (`style={{ }}`) excessively. Prefer Tailwind.
+*   **DON'T** leave `console.log()` statements or commented-out old code in your final commits.
+*   **DON'T** directly manipulate the DOM if React can achieve the same result declaratively.
+*   **DON'T** introduce breaking changes to the AI's expected artifact structure (`<mcgArtifact>`, `<mcgAction>`) without also updating `prompts.ts`, `message-parser.ts`, and potentially `action-runner.ts`.
+*   **DON'T** commit generated files from the WebContainer (like `node_modules` inside a generated project, or build outputs) to the main repository.
+
+### 8. Effectively Using Cursor (and Me, Your AI Guide) with MCG
+
+To make the most of AI assistance on this project:
+
+*   **Be Specific in Your Prompts**: 
+    *   Instead of: "Make a resume component."
+    *   Say: "Create a React component named `ExperienceItem.client.tsx` in `app/components/resume/experience/`. It should display job title, company, dates, and a list of achievements. Use Tailwind CSS for styling according to our project's theme. The achievements should be an unordered list."
+*   **Provide Context**: 
+    *   If you're working on a specific file, make sure it's open and active in Cursor, or @-mention the file path (e.g., `Modify @app/components/chat/Chat.client.tsx to...`).
+    *   If you're referring to a concept defined in these rules, you can @-mention the rule file (e.g., "Ensure the styling follows `@frontend-rules`.").
+*   **Reference Existing Code**: "Make this new component look and feel similar to `@app/components/ui/Card.tsx`."
+*   **Iterate**: The first AI response might not be perfect. Provide feedback: "That's a good start, but can you also add a prop for an optional company logo? And ensure the spacing follows the 4px grid system from Tailwind."
+*   **Use `/Generate Cursor Rules`**: If you find yourself repeatedly giving me (the AI) the same set of complex instructions for a recurring task, ask me to turn that conversation into a new Cursor rule! For example: "`/Generate Cursor Rules` from our discussion about creating new resume section components. The rule should include the standard props, file location, and styling guidelines we just established."
+*   **Understand My Limitations**: I work based on the context I'm given (including these rules) and my training data. I don't have live access to your running application's state beyond what you show me in files. Complex debugging might still require your manual intervention.
+
+### 9. Testing Your Work
+
+Quality is paramount.
+
+1.  **Manual Testing (Essential)**:
+    *   Always test the user flows related to your changes. If you changed how skills are added, go through that entire process in the UI.
+    *   Test different inputs and edge cases for AI resume generation if you've modified prompts or related logic.
+    *   Verify UI on different screen sizes (use browser dev tools) to ensure responsiveness.
+    *   Check for console errors in your browser.
+2.  **Potential Future Improvements (Not Yet Implemented)**:
+    *   Adding automated unit tests for critical components or utility functions.
+    *   Developing integration tests for the AI response flow.
+    *   (You are not expected to set these up initially, but be mindful of writing testable code.)
+
+### 10. Deployment
+
+The project is configured for deployment on Cloudflare Pages. This typically involves:
+*   Pushing your changes to the main Git repository.
+*   Cloudflare Pages automatically building the Remix application (using `npm run build`).
+*   Deploying the static assets and Cloudflare Functions.
+*   (You won't manage deployments directly as an intern, but it's good to know the process.)
+
+### 11. Additional Resources
+
+For deeper understanding of the technologies used, refer to their official documentation:
+
+- **Remix**: https://remix.run/docs
+- **Tailwind CSS**: https://tailwindcss.com/docs
+- **Nanostores**: https://github.com/nanostores/nanostores
+- **WebContainer API**: https://webcontainers.io/
+- **Anthropic Claude API**: https://docs.anthropic.com/ (for understanding LLM capabilities)
+- **Three.js**: https://threejs.org/docs/
+- **Framer Motion**: https://www.framer.com/motion/introduction/
+
+This guide is your starting point. Don't hesitate to ask questions – either to me (your AI partner) or your human team members. Good luck, and let's build an amazing resume tool!

@@ -10,11 +10,13 @@ import {
 import { IconButton } from '~/components/ui/IconButton';
 import { PanelHeaderButton } from '~/components/ui/PanelHeaderButton';
 import { Slider, type SliderOptions } from '~/components/ui/Slider';
+import { portfolioStore, setPortfolioMode, showPortfolioConverter } from '~/lib/stores/portfolio';
 import { workbenchStore, type WorkbenchViewType } from '~/lib/stores/workbench';
 import { classNames } from '~/utils/classNames';
 import { cubicEasingFn } from '~/utils/easings';
 import { renderLogger } from '~/utils/logger';
 import { EditorPanel } from './EditorPanel';
+import { PortfolioConverter } from './PortfolioConverter.client';
 import { Preview } from './Preview';
 
 interface WorkspaceProps {
@@ -62,6 +64,8 @@ export const Workbench = memo(({ chatStarted, isStreaming }: WorkspaceProps) => 
   const unsavedFiles = useStore(workbenchStore.unsavedFiles);
   const files = useStore(workbenchStore.files);
   const selectedView = useStore(workbenchStore.currentView);
+  const artifacts = useStore(workbenchStore.artifacts);
+  const portfolio = useStore(portfolioStore);
 
   const setSelectedView = (view: WorkbenchViewType) => {
     workbenchStore.currentView.set(view);
@@ -72,6 +76,24 @@ export const Workbench = memo(({ chatStarted, isStreaming }: WorkspaceProps) => 
       setSelectedView('preview');
     }
   }, [hasPreview]);
+
+  // Check if any artifacts are closed (generation complete) and ensure preview tab is selected
+  useEffect(() => {
+    const artifactsArray = Object.values(artifacts);
+    if (artifactsArray.length > 0) {
+      const lastArtifact = artifactsArray[artifactsArray.length - 1];
+      if (lastArtifact?.closed && hasPreview) {
+        setSelectedView('preview');
+        
+        // Show the portfolio converter option after resume generation is complete
+        if (!portfolio.showConverter) {
+          setTimeout(() => {
+            showPortfolioConverter(true);
+          }, 1000);
+        }
+      }
+    }
+  }, [artifacts, hasPreview, portfolio.showConverter]);
 
   useEffect(() => {
     workbenchStore.setDocuments(files);
@@ -98,6 +120,25 @@ export const Workbench = memo(({ chatStarted, isStreaming }: WorkspaceProps) => 
   const onFileReset = useCallback(() => {
     workbenchStore.resetCurrentDocument();
   }, []);
+  
+  const handleConvertToPortfolio = useCallback(() => {
+    const artifactsArray = Object.values(artifacts);
+    if (artifactsArray.length > 0) {
+      const lastArtifact = artifactsArray[artifactsArray.length - 1];
+      if (lastArtifact) {
+        setPortfolioMode('portfolio');
+      }
+    }
+  }, [artifacts]);
+
+  const toggleMode = useCallback(() => {
+    const newMode = portfolio.mode === 'resume' ? 'portfolio' : 'resume';
+    setPortfolioMode(newMode);
+    toast.info(`Switched to ${newMode} mode`, { 
+      position: "bottom-right",
+      autoClose: 2000 
+    });
+  }, [portfolio.mode]);
 
   return (
     chatStarted && (
@@ -121,6 +162,18 @@ export const Workbench = memo(({ chatStarted, isStreaming }: WorkspaceProps) => 
               <div className="flex items-center px-3 py-2 border-b border-bolt-elements-borderColor">
                 <Slider selected={selectedView} options={sliderOptions} setSelected={setSelectedView} />
                 <div className="ml-auto" />
+                
+                {/* Portfolio Mode Toggle */}
+                {artifacts && Object.values(artifacts).some(a => a?.closed) && (
+                  <PanelHeaderButton
+                    className="mr-2 text-sm"
+                    onClick={toggleMode}
+                  >
+                    <div className={portfolio.mode === 'resume' ? "i-ph:file-doc" : "i-ph:globe"} />
+                    {portfolio.mode === 'resume' ? 'Resume' : 'Portfolio'} Mode
+                  </PanelHeaderButton>
+                )}
+                
                 {selectedView === 'code' && (
                   <PanelHeaderButton
                     className="mr-1 text-sm"
@@ -163,7 +216,19 @@ export const Workbench = memo(({ chatStarted, isStreaming }: WorkspaceProps) => 
                   initial={{ x: selectedView === 'preview' ? 0 : '100%' }}
                   animate={{ x: selectedView === 'preview' ? 0 : '100%' }}
                 >
-                  <Preview />
+                  <div className="h-full flex flex-col">
+                    <Preview />
+                    
+                    {/* Portfolio Converter */}
+                    {portfolio.showConverter && portfolio.mode === 'resume' && selectedView === 'preview' && (
+                      <div className="p-4">
+                        <PortfolioConverter 
+                          onConvert={handleConvertToPortfolio}
+                          className="max-w-lg mx-auto"
+                        />
+                      </div>
+                    )}
+                  </div>
                 </View>
               </div>
             </div>

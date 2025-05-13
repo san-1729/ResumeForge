@@ -32,7 +32,7 @@ export class WorkbenchStore {
   artifacts: Artifacts = import.meta.hot?.data.artifacts ?? map({});
 
   showWorkbench: WritableAtom<boolean> = import.meta.hot?.data.showWorkbench ?? atom(false);
-  currentView: WritableAtom<WorkbenchViewType> = import.meta.hot?.data.currentView ?? atom('code');
+  currentView: WritableAtom<WorkbenchViewType> = import.meta.hot?.data.currentView ?? atom('preview');
   unsavedFiles: WritableAtom<Set<string>> = import.meta.hot?.data.unsavedFiles ?? atom(new Set<string>());
   modifiedFiles = new Set<string>();
   artifactIdList: string[] = [];
@@ -43,6 +43,11 @@ export class WorkbenchStore {
       import.meta.hot.data.unsavedFiles = this.unsavedFiles;
       import.meta.hot.data.showWorkbench = this.showWorkbench;
       import.meta.hot.data.currentView = this.currentView;
+    }
+    
+    // Default to preview tab if previews exist
+    if (this.#previewsStore.previews.get().length > 0) {
+      this.currentView.set('preview');
     }
   }
 
@@ -231,6 +236,9 @@ export class WorkbenchStore {
       closed: false,
       runner: new ActionRunner(webcontainer),
     });
+    
+    // Set preference for preview tab when artifact is added
+    this.currentView.set('preview');
   }
 
   updateArtifact({ messageId }: ArtifactCallbackData, state: Partial<ArtifactUpdateState>) {
@@ -241,6 +249,11 @@ export class WorkbenchStore {
     }
 
     this.artifacts.setKey(messageId, { ...artifact, ...state });
+    
+    // When artifact is closed (completed), prioritize preview tab
+    if (state.closed && this.previews.get().length > 0) {
+      this.currentView.set('preview');
+    }
   }
 
   async addAction(data: ActionCallbackData) {

@@ -1,0 +1,93 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+You are a senior frontend developer assisting with the MCG (My Career Growth) project. MCG is an AI-powered resume builder adapted from the `stackblitz/bolt.new` repository. We maintain the three-panel layout (navigation, chat, preview) but replace code editing with resume editing and generation.
+
+## Project Overview & Core Frontend Technologies
+
+MCG leverages the following for its frontend:
+- **Framework**: Remix (React-based)
+- **Styling**: Tailwind CSS (primary styling method)
+- **UI Components**: Custom React components, with some elements from the original Bolt project.
+- **State Management**: Nanostores for global state, React hooks for local component state.
+- **Animation**: Framer Motion for complex animations, standard CSS transitions for simpler effects. The `ResumeBackground.client.tsx` uses Three.js for the background.
+- **Key Libraries**: `ai/react` for chat, various Remix utilities.
+
+## Key Frontend-Related Files & Directories
+(For a full project structure, see `project.mdc`)
+
+- `app/components/`: Contains all UI components.
+  - `chat/`: Chat interface components (`Chat.client.tsx`, `BaseChat.tsx`, `Messages.client.tsx`).
+  - `header/`: Application header (`Header.tsx`).
+  - `sidebar/`: Navigation sidebar, history (`Menu.client.tsx`).
+  - `ui/`: Shared, generic UI elements (`ResumeBackground.client.tsx`, `Dialog.tsx`, `IconButton.tsx`).
+  - `workbench/`: Preview panel components (`Preview.tsx`, `Workbench.client.tsx`).
+- `app/routes/_index.tsx`: Main landing page, renders core layout.
+- `app/lib/hooks/`: Custom React hooks (e.g., `useMessageParser.ts`).
+- `app/lib/stores/`: Nanostores for global state (`chat.ts`, `workbench.ts`).
+- `app/styles/`: Global styles and Tailwind configuration.
+
+## High-Level Frontend Application Flow
+
+1.  **Landing (`app/routes/_index.tsx`)**: Renders `Header` and `Chat` components. `ResumeBackground.client.tsx` displays a Three.js animation.
+2.  **Prompt Handling (`app/components/chat/Chat.client.tsx`)**: User input is sent to `/api/chat`. The UI transitions to active chat mode.
+3.  **AI Response & Parsing**: The AI response (with `<mcgArtifact>` tags) is processed by `StreamingMessageParser` (used via `useMessageParser` hook in `Chat.client.tsx`).
+4.  **Action Execution & Preview (`app/components/workbench/Preview.tsx`)**:
+    *   `ActionRunner` (in `app/lib/runtime/`) executes actions (file creation, server commands) in the WebContainer.
+    *   `Preview.tsx` displays the resume from the WebContainer's dev server in an iframe.
+    *   The workbench tabs might show "Resume" (for code/structure view of the resume files) and "Preview".
+
+## Key Frontend Modifications from Original Bolt Project
+
+1.  **Chat Interface (`app/components/chat/BaseChat.tsx`, `Chat.client.tsx`)**: Example prompts are resume-focused. Messaging and styling emphasize resume creation.
+2.  **Visual Elements**:
+    *   `ResumeBackground.client.tsx` added for a professional Three.js animation.
+    *   `Header.tsx` updated with MCG branding.
+    *   Workbench tabs adjusted (e.g., "Resume" instead of "Code").
+3.  **Workbench Implementation**: Focus is on rendering resume templates (HTML/CSS/JS served by WebContainer) rather than general code execution.
+
+## Frontend Implementation Guidance & Coding Standards
+
+When developing or asking the AI to develop frontend components and logic:
+
+### 1. Component Structure & React Best Practices:
+   - **File Suffix**: Use `.client.tsx` for components with client-side specific hooks or interactivity if they cannot be server components.
+   - **Functional Components**: Always use functional React components with hooks. Avoid class components.
+   - **Separation of Concerns**: Maintain a clear separation between UI (JSX), styling (Tailwind classes), and logic (hooks, event handlers).
+   - **Props**: Define props clearly using TypeScript interfaces.
+   - **Readability**: Prioritize clean, readable code. Use descriptive variable and function names.
+
+### 2. Styling:
+   - **Tailwind CSS**: This is the primary styling method. Apply utility classes directly in the JSX.
+   - **Existing Conventions**: Follow existing Tailwind class conventions and the established color scheme (blue accents for MCG branding).
+   - **SCSS Modules**: For highly component-specific styles that are difficult to achieve with Tailwind alone, SCSS modules (e.g., `MyComponent.module.scss`) can be used, but prefer Tailwind.
+   - **Animations**: Use Framer Motion for complex UI animations. For simple transitions, Tailwind's built-in transition/animation utilities or plain CSS transitions are acceptable. The `ResumeBackground.client.tsx` handles the Three.js background.
+
+### 3. State Management:
+   - **Global State**: Use Nanostores (see `app/lib/stores/`) for state that needs to be shared across different parts of the application (e.g., chat state, workbench state).
+   - **Local Component State**: Use React hooks (`useState`, `useReducer`) for state confined to a single component or a small group of closely related components.
+   - **Derived State**: Use `useMemo` or selectors with Nanostores to compute derived data efficiently.
+
+### 4. LLM Interaction & Artifacts (How the AI generates UI):
+   - The AI will generate resume content as HTML/CSS/JS files, often including a `package.json` and commands to run a dev server (like Vite).
+   - These are wrapped in `<mcgArtifact>` tags, which are parsed by `StreamingMessageParser`.
+   - `ActionRunner` then creates these files in the WebContainer.
+   - **Your role**: You might ask the AI to "generate an HTML structure for a resume's education section using Tailwind CSS" or "update the `styles.css` to change the heading font."
+
+### 5. Resume Preview:
+   - The preview in `Preview.tsx` is an `<iframe>` pointing to the dev server in the WebContainer.
+   - Typical resume template files created by the AI will be `index.html`, `styles.css`, and optionally `script.js`.
+
+### 6. Directory Structure:
+   - Place new UI components in appropriate subdirectories within `app/components/`.
+   - General, reusable UI elements go into `app/components/ui/`.
+   - Page-specific or feature-specific components might go into a directory related to that feature if not broadly reusable.
+
+### 7. General Principles:
+   - **Modularity**: Create small, reusable components where possible.
+   - **Performance**: Be mindful of performance. Use `React.memo`, `useCallback`, `useMemo` where appropriate, especially for larger lists or frequently re-rendering components.
+   - **Accessibility (a11y)**: Strive to make UI components accessible (semantic HTML, ARIA attributes where necessary, keyboard navigability).
+
+When asking the AI for help with frontend tasks, refer to these guidelines. For example: "Create a new React component `ExperienceCard.tsx` in `app/components/resume/` using Tailwind CSS, following our project's styling for section headers."
