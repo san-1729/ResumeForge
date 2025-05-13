@@ -12,6 +12,8 @@ import { toast } from 'react-toastify';
 import { TemplateSelector } from './TemplateSelector.client';
 import { useStore } from '@nanostores/react';
 import { selectTemplate, templateStore } from '~/lib/stores/template';
+import { LinkedInImportDialog } from './LinkedInImportDialog.client';
+import { linkedInStore, type LinkedInProfile, formatLinkedInDataForPrompt } from '~/lib/stores/linkedin';
 
 import styles from './BaseChat.module.scss';
 
@@ -64,15 +66,53 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
   ) => {
     const TEXTAREA_MAX_HEIGHT = chatStarted ? 400 : 200;
     const templateState = useStore(templateStore);
+    const linkedInState = useStore(linkedInStore);
     const [selectedTemplateId, setSelectedTemplateId] = React.useState<string | null>(null);
     const [showConfirmation, setShowConfirmation] = React.useState(false);
+    const [showLinkedInDialog, setShowLinkedInDialog] = React.useState(false);
     
     const handleLinkedInImport = () => {
-      toast.info("LinkedIn import feature coming soon!", {
-        position: "bottom-right",
-        autoClose: 3000,
-      });
+      console.log('LinkedIn import button clicked');
+      setShowLinkedInDialog(true);
     };
+    
+    const handleLinkedInImportSuccess = (profileData: LinkedInProfile) => {
+      console.log('LinkedIn import successful, data received in BaseChat');
+      
+      // If we already have a chat started, let the user know their data is ready to use
+      if (chatStarted) {
+        toast.success('LinkedIn data imported! You can now ask for a personalized resume based on your profile.');
+      } else {
+        // If no chat started, we can pre-fill a prompt for them
+        const jobTitle = profileData.occupation || profileData.headline || '';
+        const promptText = `Create a professional resume for a ${jobTitle} based on my LinkedIn profile.`;
+        sendMessage?.(new Event('click') as any, promptText);
+      }
+    };
+    
+    // Modify the original sendMessage to include LinkedIn data if available
+    const enhancedSendMessage = React.useCallback(
+      (event: React.UIEvent, messageInput?: string) => {
+        if (!sendMessage) return;
+        
+        // If we have LinkedIn data, prefix the message with the formatted data
+        if (linkedInState.isImported && linkedInState.profileData) {
+          console.log('Including LinkedIn data in message');
+          const linkedInText = formatLinkedInDataForPrompt(linkedInState.profileData);
+          const userText = messageInput || input;
+          
+          // Create a custom event to pass to sendMessage
+          const customEvent = new Event('click') as any;
+          
+          // Call sendMessage with the enhanced prompt
+          sendMessage(customEvent, `${linkedInText}\n\n${userText}`);
+        } else {
+          // No LinkedIn data, use regular sendMessage
+          sendMessage(event, messageInput);
+        }
+      },
+      [sendMessage, input, linkedInState]
+    );
 
     const handleTemplateSelect = (templateId: string) => {
       setSelectedTemplateId(templateId);
@@ -197,7 +237,7 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
 
                         event.preventDefault();
 
-                        sendMessage?.(event);
+                        enhancedSendMessage?.(event);
                       }
                     }}
                     value={input}
@@ -222,7 +262,7 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
                             return;
                           }
 
-                          sendMessage?.(event);
+                          enhancedSendMessage?.(event);
                         }}
                       />
                     )}
@@ -254,11 +294,19 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
                       
                       <IconButton
                         title="Import from LinkedIn"
-                        className="ml-2 text-[#0077B5] hover:bg-blue-50 dark:hover:bg-blue-900/30"
+                        className={classNames(
+                          "ml-2 hover:bg-blue-50 dark:hover:bg-blue-900/30", 
+                          linkedInState.isImported ? "text-green-500" : "text-[#0077B5]"
+                        )}
                         onClick={handleLinkedInImport}
                       >
                         <div className="i-ph:linkedin-logo-fill text-xl"></div>
-                        <div className="ml-1.5">Import from LinkedIn</div>
+                        <div className="ml-1.5 flex items-center">
+                          {linkedInState.isImported ? 'LinkedIn Data Imported' : 'Import from LinkedIn'}
+                          {linkedInState.isImported && (
+                            <div className="i-ph:check-circle-fill ml-1 text-green-500"></div>
+                          )}
+                        </div>
                       </IconButton>
                     </div>
                     {input.length > 3 ? (
@@ -281,7 +329,7 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
                         <button
                           key={index}
                           onClick={(event) => {
-                            sendMessage?.(event, examplePrompt.text);
+                            enhancedSendMessage?.(event, examplePrompt.text);
                           }}
                           className={`group flex items-center w-full gap-2 justify-between px-4 py-2 bg-gray-900 hover:bg-gray-800 text-gray-400 hover:text-white rounded-lg transition-all border border-gray-800 hover:border-blue-500 animate-fade-in shadow-md`}
                           style={{ animationDelay: `${(index + 1) * 150}ms` }}
@@ -769,6 +817,17 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
           </div>
           <ClientOnly>{() => <Workbench chatStarted={chatStarted} isStreaming={isStreaming} />}</ClientOnly>
         </div>
+        
+        {/* LinkedIn Import Dialog */}
+        <ClientOnly>
+          {() => (
+            <LinkedInImportDialog 
+              isOpen={showLinkedInDialog}
+              onClose={() => setShowLinkedInDialog(false)}
+              onImportSuccess={handleLinkedInImportSuccess}
+            />
+          )}
+        </ClientOnly>
       </div>
     );
   },
