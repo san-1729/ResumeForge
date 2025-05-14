@@ -95,25 +95,15 @@ const TemplateCard = ({ template, isSelected, onClick }: TemplateCardProps) => {
   );
 };
 
-interface TemplateSelectorProps {
-  onSelectTemplate?: (templateId: string) => void;
+export interface TemplateSelectorProps {
+  onSelect: (templateId: string) => void;
+  selectedId: string | null;
+  showConfirmation: boolean;
 }
 
-export const TemplateSelector = ({ onSelectTemplate }: TemplateSelectorProps) => {
-  const [selectedTemplate, setSelectedTemplate] = useState<string | null>(null);
-
+export const TemplateSelector = ({ onSelect, selectedId, showConfirmation }: TemplateSelectorProps) => {
   const handleSelectTemplate = (templateId: string) => {
-    setSelectedTemplate(templateId);
-    
-    if (onSelectTemplate) {
-      onSelectTemplate(templateId);
-    } else {
-      // If no handler is provided, just show a toast
-      toast.info(`Template "${RESUME_TEMPLATES.find(t => t.id === templateId)?.name}" selected!`, {
-        position: "bottom-right",
-        autoClose: 2000,
-      });
-    }
+    onSelect(templateId);
   };
 
   return (
@@ -122,11 +112,11 @@ export const TemplateSelector = ({ onSelectTemplate }: TemplateSelectorProps) =>
         Choose a Template
       </h2>
       <div className="grid grid-cols-2 md:grid-cols-3 gap-4 px-4">
-        {RESUME_TEMPLATES.map((template, index) => (
+        {RESUME_TEMPLATES.map((template) => (
           <TemplateCard
             key={template.id}
             template={template}
-            isSelected={selectedTemplate === template.id}
+            isSelected={selectedId === template.id}
             onClick={() => handleSelectTemplate(template.id)}
           />
         ))}

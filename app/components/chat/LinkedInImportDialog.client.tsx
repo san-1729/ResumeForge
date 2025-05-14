@@ -2,22 +2,18 @@ import React, { useState } from 'react';
 import { toast } from 'react-toastify';
 import { setLinkedInProfile, type LinkedInProfile } from '~/lib/stores/linkedin';
 
-interface LinkedInImportDialogProps {
-  isOpen: boolean;
+export interface LinkedInImportDialogProps {
   onClose: () => void;
-  onImportSuccess: (profileData: LinkedInProfile) => void;
+  onSuccess: (profileData: LinkedInProfile) => void;
 }
 
 export const LinkedInImportDialog: React.FC<LinkedInImportDialogProps> = ({
-  isOpen,
   onClose,
-  onImportSuccess
+  onSuccess
 }) => {
   const [profileUrl, setProfileUrl] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  if (!isOpen) return null;
 
   const handleImport = async () => {
     setIsLoading(true);
@@ -73,7 +69,7 @@ export const LinkedInImportDialog: React.FC<LinkedInImportDialogProps> = ({
       
       // Step 4: Notify success and close
       toast.success('LinkedIn profile imported successfully!');
-      onImportSuccess(profileData);
+      onSuccess(profileData);
       onClose();
       
     } catch (err: any) {
