@@ -15,7 +15,7 @@ export const Messages = React.forwardRef<HTMLDivElement, MessagesProps>((props: 
   const { id, isStreaming = false, messages = [] } = props;
 
   return (
-    <div id={id} ref={ref} className={props.className}>
+    <div id={id} ref={ref} className={classNames('chat-container', props.className)}>
       {messages.length > 0
         ? messages.map((message, index) => {
             const { role, content } = message;

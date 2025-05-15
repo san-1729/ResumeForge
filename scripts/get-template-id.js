@@ -1,0 +1,2 @@
+import postgres from 'postgres';
+(async()=>{const sql=postgres(process.env.SUPABASE_DB_URL,{ssl:'require'});const t=await sql`select id,slug from public.templates`;console.log(t);await sql.end();})(); 

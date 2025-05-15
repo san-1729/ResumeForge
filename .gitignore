@@ -5,7 +5,7 @@ yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
-
+.cursor
 node_modules
 dist
 dist-ssr
@@ -24,7 +24,6 @@ dist-ssr
 
 /.cache
 /build
-#.env*
 *.vars
 .wrangler
 _worker.bundle

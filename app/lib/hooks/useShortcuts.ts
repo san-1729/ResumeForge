@@ -29,6 +29,11 @@ export function useShortcuts(): void {
 
       for (const name in shortcuts) {
         const shortcut = shortcuts[name as keyof Shortcuts];
+        
+        // Skip if shortcut or key is undefined
+        if (!shortcut || !shortcut.key) {
+          continue;
+        }
 
         if (
           shortcut.key.toLowerCase() === key.toLowerCase() &&

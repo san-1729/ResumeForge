@@ -32,6 +32,7 @@ interface BaseChatProps {
   sendMessage?: (event: React.UIEvent, messageInput?: string) => void;
   handleInputChange?: (event: React.ChangeEvent<HTMLTextAreaElement>) => void;
   enhancePrompt?: () => void;
+  showWorkbench?: boolean;
 }
 
 const EXAMPLE_PROMPTS = [
@@ -61,9 +62,11 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
       handleInputChange,
       enhancePrompt,
       handleStop,
+      showWorkbench = false,
     },
     ref,
   ) => {
+    // Component lifecycle and state hooks removed
     const TEXTAREA_MAX_HEIGHT = chatStarted ? 400 : 200;
     const templateState = useStore(templateStore);
     const linkedInState = useStore(linkedInStore);
@@ -72,20 +75,25 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
     const [showLinkedInDialog, setShowLinkedInDialog] = React.useState(false);
     
     const handleLinkedInImport = () => {
-      console.log('LinkedIn import button clicked');
+      console.log('[LinkedIn UI] Import button clicked');
       setShowLinkedInDialog(true);
+      console.log('[LinkedIn UI] LinkedIn import dialog opened');
     };
     
     const handleLinkedInImportSuccess = (profileData: LinkedInProfile) => {
-      console.log('LinkedIn import successful, data received in BaseChat');
+      console.log('[LinkedIn UI] Import successful callback triggered');
+      console.log('[LinkedIn UI] Received profile data for:', profileData.full_name);
       
       // If we already have a chat started, let the user know their data is ready to use
       if (chatStarted) {
+        console.log('[LinkedIn UI] Chat already started, showing success message');
         toast.success('LinkedIn data imported! You can now ask for a personalized resume based on your profile.');
       } else {
         // If no chat started, we can pre-fill a prompt for them
         const jobTitle = profileData.occupation || profileData.headline || '';
+        console.log('[LinkedIn UI] Pre-filling prompt with job title:', jobTitle);
         const promptText = `Create a professional resume for a ${jobTitle} based on my LinkedIn profile.`;
+        console.log('[LinkedIn UI] Auto-sending prompt:', promptText);
         sendMessage?.(new Event('click') as any, promptText);
       }
     };
@@ -97,17 +105,29 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
         
         // If we have LinkedIn data, prefix the message with the formatted data
         if (linkedInState.isImported && linkedInState.profileData) {
-          console.log('Including LinkedIn data in message');
+          console.log('[LinkedIn UI] Including LinkedIn data in prompt');
+          console.log('[LinkedIn UI] LinkedIn data available for:', linkedInState.profileData.full_name);
+          
           const linkedInText = formatLinkedInDataForPrompt(linkedInState.profileData);
+          console.log('[LinkedIn UI] Formatted LinkedIn data size:', linkedInText.length, 'characters');
+          console.log('[LinkedIn UI] LinkedIn data sections included:', 
+            Object.keys(linkedInState.profileData || {})
+              .filter(key => linkedInState.profileData && linkedInState.profileData[key] !== undefined)
+              .join(', ')
+          );
+          
           const userText = messageInput || input;
+          console.log('[LinkedIn UI] User message:', userText);
           
           // Create a custom event to pass to sendMessage
           const customEvent = new Event('click') as any;
           
           // Call sendMessage with the enhanced prompt
+          console.log('[LinkedIn UI] Sending enhanced prompt with LinkedIn data + user message');
           sendMessage(customEvent, `${linkedInText}\n\n${userText}`);
         } else {
           // No LinkedIn data, use regular sendMessage
+          console.log('[LinkedIn UI] No LinkedIn data available, sending regular message');
           sendMessage(event, messageInput);
         }
       },
@@ -179,6 +199,7 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
           'relative flex h-full w-full overflow-hidden bg-bolt-elements-background-depth-1',
         )}
         data-chat-visible={showChat}
+        data-workbench-visible={showWorkbench}
       >
         {/* ThreeJS Background */}
         <ClientOnly>
@@ -186,8 +207,14 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
         </ClientOnly>
         
         <ClientOnly>{() => <Menu />}</ClientOnly>
-        <div ref={scrollRef} className="flex flex-col overflow-y-auto w-full h-full">
-          <div className={classNames(styles.Chat, 'flex flex-col flex-grow min-w-[var(--chat-min-width)] min-h-screen')}>
+        <div ref={scrollRef} className="flex flex-1 overflow-hidden h-full">
+          <div 
+            className={classNames("flex flex-col flex-1 h-full transition-all duration-300", {
+              'hidden': !showChat, // Completely hide when not visible
+              'pr-4': showWorkbench, // Add padding when workbench is visible
+              'max-w-full': !showWorkbench, // Full width when workbench is hidden
+            })}
+          >
             {!chatStarted && (
               <div id="intro" className="pt-12 max-w-chat mx-auto relative z-10">
                 <h1 className="text-5xl text-center font-bold text-bolt-elements-textPrimary mb-2 animate-fade-in">
@@ -209,7 +236,13 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
                   return chatStarted ? (
                     <Messages
                       ref={messageRef}
-                      className="flex flex-col w-full flex-1 max-w-chat px-4 pb-6 mx-auto z-1"
+                      className={classNames(
+                        'flex flex-col w-full flex-1 px-4 pb-6 z-1',
+                        {
+                          'max-w-chat mx-auto': !showWorkbench,
+                          'mr-4': showWorkbench
+                        }
+                      )}
                       messages={messages}
                       isStreaming={isStreaming}
                     />
@@ -217,9 +250,14 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
                 }}
               </ClientOnly>
               <div
-                className={classNames('relative w-full max-w-chat mx-auto z-prompt', {
-                  'sticky bottom-0': chatStarted,
-                })}
+                className={classNames(
+                  'relative w-full z-prompt', 
+                  {
+                    'max-w-chat mx-auto': !showWorkbench,
+                    'mr-8': showWorkbench,
+                    'sticky bottom-0': chatStarted,
+                  }
+                )}
               >
                 <div
                   className={classNames(
@@ -815,17 +853,28 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
               </div>
             )}
           </div>
-          <ClientOnly>{() => <Workbench chatStarted={chatStarted} isStreaming={isStreaming} />}</ClientOnly>
+          <ClientOnly>
+            {() => (
+              <div className={classNames('transition-all duration-300 ease-in-out', {
+                'opacity-0 transform translate-x-full': !showWorkbench,
+                'opacity-100': showWorkbench,
+              })}>
+                <Workbench isStreaming={isStreaming} />
+              </div>
+            )}
+          </ClientOnly>
         </div>
         
         {/* LinkedIn Import Dialog */}
         <ClientOnly>
           {() => (
-            <LinkedInImportDialog 
-              isOpen={showLinkedInDialog}
-              onClose={() => setShowLinkedInDialog(false)}
-              onImportSuccess={handleLinkedInImportSuccess}
-            />
+            showLinkedInDialog && (
+              <LinkedInImportDialog 
+                isOpen={showLinkedInDialog}
+                onClose={() => setShowLinkedInDialog(false)}
+                onSuccess={handleLinkedInImportSuccess}
+              />
+            )
           )}
         </ClientOnly>
       </div>

@@ -18,9 +18,9 @@ import { renderLogger } from '~/utils/logger';
 import { EditorPanel } from './EditorPanel';
 import { PortfolioConverter } from './PortfolioConverter.client';
 import { Preview } from './Preview';
+import { chatStore } from '~/lib/stores/chat';
 
 interface WorkspaceProps {
-  chatStarted?: boolean;
   isStreaming?: boolean;
 }
 
@@ -40,25 +40,31 @@ const sliderOptions: SliderOptions<WorkbenchViewType> = {
 const workbenchVariants = {
   closed: {
     width: 0,
+    opacity: 0,
     transition: {
-      duration: 0.2,
-      ease: cubicEasingFn,
+      width: { duration: 0.3, ease: cubicEasingFn },
+      opacity: { duration: 0.2, ease: cubicEasingFn }
     },
   },
   open: {
     width: 'var(--workbench-width)',
+    opacity: 1,
     transition: {
-      duration: 0.2,
-      ease: cubicEasingFn,
+      width: { duration: 0.3, ease: cubicEasingFn },
+      opacity: { duration: 0.3, delay: 0.1, ease: cubicEasingFn }
     },
   },
 } satisfies Variants;
 
-export const Workbench = memo(({ chatStarted, isStreaming }: WorkspaceProps) => {
+export const Workbench = memo(({ isStreaming }: WorkspaceProps) => {
   renderLogger.trace('Workbench');
+  
+  // DEBUG: Add detailed logging for layout debugging
+  console.log('[Workbench] Component rendering');
 
   const hasPreview = useStore(computed(workbenchStore.previews, (previews) => previews.length > 0));
   const showWorkbench = useStore(workbenchStore.showWorkbench);
+  console.log('[Workbench] showWorkbench state:', showWorkbench);
   const selectedFile = useStore(workbenchStore.selectedFile);
   const currentDocument = useStore(workbenchStore.currentDocument);
   const unsavedFiles = useStore(workbenchStore.unsavedFiles);
@@ -66,6 +72,7 @@ export const Workbench = memo(({ chatStarted, isStreaming }: WorkspaceProps) => 
   const selectedView = useStore(workbenchStore.currentView);
   const artifacts = useStore(workbenchStore.artifacts);
   const portfolio = useStore(portfolioStore);
+  const chatState = useStore(chatStore);
 
   const setSelectedView = (view: WorkbenchViewType) => {
     workbenchStore.currentView.set(view);
@@ -141,96 +148,103 @@ export const Workbench = memo(({ chatStarted, isStreaming }: WorkspaceProps) => 
   }, [portfolio.mode]);
 
   return (
-    chatStarted && (
+    chatState.started && (
       <motion.div
         initial="closed"
         animate={showWorkbench ? 'open' : 'closed'}
         variants={workbenchVariants}
-        className="z-workbench"
+        data-testid="workbench-panel"
+        className="z-workbench h-full"
+        id="mcg-workbench-container"
       >
         <div
           className={classNames(
-            'fixed top-[calc(var(--header-height)+1.5rem)] bottom-6 w-[var(--workbench-inner-width)] mr-4 z-0 transition-[left,width] duration-200 bolt-ease-cubic-bezier',
+            'relative h-full rounded-lg overflow-hidden border border-bolt-elements-borderColor shadow-md bg-bolt-elements-background-depth-2',
             {
-              'left-[var(--workbench-left)]': showWorkbench,
-              'left-[100%]': !showWorkbench,
+              'opacity-100': showWorkbench,
+              'opacity-0': !showWorkbench,
             },
           )}
         >
-          <div className="absolute inset-0 px-6">
-            <div className="h-full flex flex-col bg-bolt-elements-background-depth-2 border border-bolt-elements-borderColor shadow-sm rounded-lg overflow-hidden">
-              <div className="flex items-center px-3 py-2 border-b border-bolt-elements-borderColor">
-                <Slider selected={selectedView} options={sliderOptions} setSelected={setSelectedView} />
-                <div className="ml-auto" />
-                
-                {/* Portfolio Mode Toggle */}
-                {artifacts && Object.values(artifacts).some(a => a?.closed) && (
-                  <PanelHeaderButton
-                    className="mr-2 text-sm"
-                    onClick={toggleMode}
-                  >
-                    <div className={portfolio.mode === 'resume' ? "i-ph:file-doc" : "i-ph:globe"} />
-                    {portfolio.mode === 'resume' ? 'Resume' : 'Portfolio'} Mode
-                  </PanelHeaderButton>
-                )}
-                
-                {selectedView === 'code' && (
-                  <PanelHeaderButton
-                    className="mr-1 text-sm"
-                    onClick={() => {
-                      workbenchStore.toggleTerminal(!workbenchStore.showTerminal.get());
-                    }}
-                  >
-                    <div className="i-ph:terminal" />
-                    Toggle Terminal
-                  </PanelHeaderButton>
-                )}
-                <IconButton
-                  icon="i-ph:x-circle"
-                  className="-mr-1"
-                  size="xl"
+          <div className="absolute inset-0 h-full flex flex-col">
+            <div className="flex items-center px-3 py-2 border-b border-bolt-elements-borderColor">
+              <Slider selected={selectedView} options={sliderOptions} setSelected={setSelectedView} />
+              <div className="ml-auto" />
+              
+              {/* Portfolio Mode Toggle - with animation */}
+              {artifacts && Object.values(artifacts).some(a => a?.closed) && (
+                <PanelHeaderButton
+                  className="mr-2 text-sm"
+                  onClick={toggleMode}
+                >
+                  <div className={portfolio.mode === 'resume' ? "i-ph:file-doc motion-safe:animate-pulse" : "i-ph:globe motion-safe:animate-pulse"} />
+                  {portfolio.mode === 'resume' ? 'Resume' : 'Portfolio'} Mode
+                </PanelHeaderButton>
+              )}
+              
+              {selectedView === 'code' && (
+                <PanelHeaderButton
+                  className="mr-1 text-sm"
                   onClick={() => {
-                    workbenchStore.showWorkbench.set(false);
+                    workbenchStore.toggleTerminal(!workbenchStore.showTerminal.get());
                   }}
+                >
+                  <div className="i-ph:terminal" />
+                  Toggle Terminal
+                </PanelHeaderButton>
+              )}
+              <IconButton
+                icon="i-ph:x-circle"
+                className="-mr-1 hover:rotate-90 transition-transform duration-300"
+                size="xl"
+                onClick={() => {
+                  // Make sure the preview tab is selected when closing
+                  if (workbenchStore.currentView.get() !== 'preview') {
+                    workbenchStore.currentView.set('preview');
+                  }
+                  // Wait briefly to ensure preview is fully visible
+                  setTimeout(() => {
+                    workbenchStore.showWorkbench.set(false);
+                  }, 50);
+                }}
+              />
+            </div>
+            <div className="relative flex-1 overflow-hidden">
+              <View
+                initial={{ x: selectedView === 'code' ? 0 : '-100%' }}
+                animate={{ x: selectedView === 'code' ? 0 : '-100%' }}
+              >
+                <EditorPanel
+                  editorDocument={currentDocument}
+                  isStreaming={isStreaming}
+                  selectedFile={selectedFile}
+                  files={files}
+                  unsavedFiles={unsavedFiles}
+                  onFileSelect={onFileSelect}
+                  onEditorScroll={onEditorScroll}
+                  onEditorChange={onEditorChange}
+                  onFileSave={onFileSave}
+                  onFileReset={onFileReset}
                 />
-              </div>
-              <div className="relative flex-1 overflow-hidden">
-                <View
-                  initial={{ x: selectedView === 'code' ? 0 : '-100%' }}
-                  animate={{ x: selectedView === 'code' ? 0 : '-100%' }}
-                >
-                  <EditorPanel
-                    editorDocument={currentDocument}
-                    isStreaming={isStreaming}
-                    selectedFile={selectedFile}
-                    files={files}
-                    unsavedFiles={unsavedFiles}
-                    onFileSelect={onFileSelect}
-                    onEditorScroll={onEditorScroll}
-                    onEditorChange={onEditorChange}
-                    onFileSave={onFileSave}
-                    onFileReset={onFileReset}
-                  />
-                </View>
-                <View
-                  initial={{ x: selectedView === 'preview' ? 0 : '100%' }}
-                  animate={{ x: selectedView === 'preview' ? 0 : '100%' }}
-                >
-                  <div className="h-full flex flex-col">
-                    <Preview />
-                    
-                    {/* Portfolio Converter */}
-                    {portfolio.showConverter && portfolio.mode === 'resume' && selectedView === 'preview' && (
-                      <div className="p-4">
-                        <PortfolioConverter 
-                          onConvert={handleConvertToPortfolio}
-                          className="max-w-lg mx-auto"
-                        />
-                      </div>
-                    )}
-                  </div>
-                </View>
-              </div>
+              </View>
+              <View
+                initial={{ x: selectedView === 'preview' ? 0 : '100%' }}
+                animate={{ x: selectedView === 'preview' ? 0 : '100%' }}
+              >
+                <div className="h-full flex flex-col">
+                  <Preview />
+                  
+                  {/* Portfolio Converter */}
+                  {portfolio.showConverter && portfolio.mode === 'resume' && selectedView === 'preview' && (
+                    <div className="p-4">
+                      <PortfolioConverter 
+                        onConvert={handleConvertToPortfolio}
+                        className="max-w-lg mx-auto"
+                      />
+                    </div>
+                  )}
+                </div>
+              </View>
             </div>
           </div>
         </div>

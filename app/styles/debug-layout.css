@@ -1,0 +1,59 @@
+/* Debug CSS to visualize layout structure and help diagnose visibility issues */
+
+/* Add visible indicators to data attribute elements */
+[data-chat-visible="true"] {
+  position: relative;
+}
+
+[data-chat-visible="true"]::before {
+  content: "chat visible=true";
+  position: absolute;
+  top: 60px;
+  left: 10px;
+  background: rgba(0, 255, 0, 0.7);
+  color: white;
+  font-size: 10px;
+  padding: 2px 5px;
+  border-radius: 3px;
+  z-index: 9999;
+  pointer-events: none;
+}
+
+[data-chat-visible="false"] {
+  position: relative;
+}
+
+[data-chat-visible="false"]::before {
+  content: "chat visible=false";
+  position: absolute;
+  top: 60px;
+  left: 10px;
+  background: rgba(255, 0, 0, 0.7);
+  color: white;
+  font-size: 10px;
+  padding: 2px 5px;
+  border-radius: 3px;
+  z-index: 9999;
+  pointer-events: none;
+}
+
+/* Add basic outlines to critical elements */
+#mcg-chat-container {
+  outline: 1px solid rgba(0, 255, 0, 0.5);
+}
+
+#mcg-workbench-container {
+  outline: 1px solid rgba(0, 0, 255, 0.5);
+}
+
+/* Diagnostic styling to verify our selectors work */
+[data-chat-visible="false"] #mcg-chat-container {
+  outline: 3px dashed red !important;
+}
+
+/* Log element paths to console for all elements with data-chat-visible */
+@media screen {
+  [data-chat-visible] {
+    outline: 1px dotted purple;
+  }
+}

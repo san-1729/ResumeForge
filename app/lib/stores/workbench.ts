@@ -34,6 +34,7 @@ export class WorkbenchStore {
   showWorkbench: WritableAtom<boolean> = import.meta.hot?.data.showWorkbench ?? atom(false);
   currentView: WritableAtom<WorkbenchViewType> = import.meta.hot?.data.currentView ?? atom('preview');
   unsavedFiles: WritableAtom<Set<string>> = import.meta.hot?.data.unsavedFiles ?? atom(new Set<string>());
+  resumeId: WritableAtom<string | null> = import.meta.hot?.data.resumeId ?? atom(null);
   modifiedFiles = new Set<string>();
   artifactIdList: string[] = [];
 
@@ -43,6 +44,7 @@ export class WorkbenchStore {
       import.meta.hot.data.unsavedFiles = this.unsavedFiles;
       import.meta.hot.data.showWorkbench = this.showWorkbench;
       import.meta.hot.data.currentView = this.currentView;
+      import.meta.hot.data.resumeId = this.resumeId;
     }
     
     // Default to preview tab if previews exist

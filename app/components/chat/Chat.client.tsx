@@ -72,6 +72,7 @@ export const ChatImpl = memo(({ initialMessages, storeMessageHistory }: ChatProp
   const [chatStarted, setChatStarted] = useState(initialMessages.length > 0);
 
   const { showChat } = useStore(chatStore);
+  const showWorkbench = useStore(workbenchStore.showWorkbench);
 
   const [animationScope, animate] = useAnimate();
 
@@ -213,6 +214,7 @@ export const ChatImpl = memo(({ initialMessages, storeMessageHistory }: ChatProp
       scrollRef={scrollRef}
       handleInputChange={handleInputChange}
       handleStop={abort}
+      showWorkbench={showWorkbench}
       messages={messages.map((message, i) => {
         if (message.role === 'user') {
           return message;

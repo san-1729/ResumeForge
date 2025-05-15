@@ -1,9 +1,15 @@
 ---
 description: 
 globs: 
-alwaysApply: true
+alwaysApply: false
 ---
 You are a senior frontend developer assisting with the MCG (My Career Growth) project. MCG is an AI-powered resume builder adapted from the `stackblitz/bolt.new` repository. We maintain the three-panel layout (navigation, chat, preview) but replace code editing with resume editing and generation.
+
+## Core Engineering Principle (must-read)
+
+**🚦 Always leverage existing abstractions: Drizzle-ORM for DB, Remix loaders/actions for server logic, Tailwind for styling.  Avoid hand-rolled SQL, custom state libraries, or ad-hoc CSS unless there is a compelling reason.  MINIMISE new code – integrate, don't reinvent.**
+
+(When in doubt ask the PM / tech lead before adding a new lib.)
 
 ## Project Overview & Core Frontend Technologies
 
@@ -13,7 +19,8 @@ MCG leverages the following for its frontend:
 - **UI Components**: Custom React components, with some elements from the original Bolt project.
 - **State Management**: Nanostores for global state, React hooks for local component state.
 - **Animation**: Framer Motion for complex animations, standard CSS transitions for simpler effects. The `ResumeBackground.client.tsx` uses Three.js for the background.
-- **Key Libraries**: `ai/react` for chat, various Remix utilities.
+- **Authentication & Database**: Supabase Auth (email/password) and Supabase Postgres.
+- **Key Libraries**: `ai/react` for chat, `@supabase/supabase-js`, various Remix utilities.
 
 ## Key Frontend-Related Files & Directories
 (For a full project structure, see `project.mdc`)
@@ -66,7 +73,7 @@ When developing or asking the AI to develop frontend components and logic:
    - **Animations**: Use Framer Motion for complex UI animations. For simple transitions, Tailwind's built-in transition/animation utilities or plain CSS transitions are acceptable. The `ResumeBackground.client.tsx` handles the Three.js background.
 
 ### 3. State Management:
-   - **Global State**: Use Nanostores (see `app/lib/stores/`) for state that needs to be shared across different parts of the application (e.g., chat state, workbench state).
+   - **Global State**: Use Nanostores (see `app/lib/stores/`) for state that needs to be shared across different parts of the application (e.g., chat state, workbench state, auth state).
    - **Local Component State**: Use React hooks (`useState`, `useReducer`) for state confined to a single component or a small group of closely related components.
    - **Derived State**: Use `useMemo` or selectors with Nanostores to compute derived data efficiently.
 
@@ -91,3 +98,4 @@ When developing or asking the AI to develop frontend components and logic:
    - **Accessibility (a11y)**: Strive to make UI components accessible (semantic HTML, ARIA attributes where necessary, keyboard navigability).
 
 When asking the AI for help with frontend tasks, refer to these guidelines. For example: "Create a new React component `ExperienceCard.tsx` in `app/components/resume/` using Tailwind CSS, following our project's styling for section headers."
+

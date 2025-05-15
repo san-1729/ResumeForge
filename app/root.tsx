@@ -1,17 +1,33 @@
 import { useStore } from '@nanostores/react';
-import type { LinksFunction, MetaFunction } from '@remix-run/cloudflare';
-import { Links, Meta, Outlet, Scripts, ScrollRestoration } from '@remix-run/react';
+import type { LinksFunction, MetaFunction, LoaderFunctionArgs } from '@remix-run/cloudflare';
+import { Links, Meta, Outlet, Scripts, ScrollRestoration, useLoaderData } from '@remix-run/react';
 import tailwindReset from '@unocss/reset/tailwind-compat.css?url';
 import { themeStore } from './lib/stores/theme';
 import { stripIndents } from './utils/stripIndent';
 import { createHead } from 'remix-island';
 import { useEffect } from 'react';
+import { json } from '@remix-run/cloudflare';
+import { ClientOnly } from 'remix-utils/client-only';
+import AuthProvider from './components/auth/AuthProvider.client';
+// Debug components removed
 
 import reactToastifyStyles from 'react-toastify/dist/ReactToastify.css?url';
 import globalStyles from './styles/index.scss?url';
+import layoutStyles from './styles/layout.css?url';
+// Debug styles removed
 import xtermStyles from '@xterm/xterm/css/xterm.css?url';
 
 import 'virtual:uno.css';
+
+// Pass environment variables to the client
+export async function loader({ request }: LoaderFunctionArgs) {
+  return json({
+    ENV: {
+      SUPABASE_URL: process.env.SUPABASE_URL,
+      SUPABASE_ANON_KEY: process.env.SUPABASE_ANON_KEY
+    }
+  });
+}
 
 export const meta: MetaFunction = () => {
   return [
@@ -29,6 +45,8 @@ export const links: LinksFunction = () => [
   { rel: 'stylesheet', href: reactToastifyStyles },
   { rel: 'stylesheet', href: tailwindReset },
   { rel: 'stylesheet', href: globalStyles },
+  { rel: 'stylesheet', href: layoutStyles },
+  // Debug styles removed
   { rel: 'stylesheet', href: xtermStyles },
   {
     rel: 'preconnect',
@@ -70,6 +88,7 @@ export const Head = createHead(() => (
 ));
 
 export function Layout({ children }: { children: React.ReactNode }) {
+  const { ENV } = useLoaderData<typeof loader>();
   const theme = useStore(themeStore);
 
   useEffect(() => {
@@ -81,10 +100,24 @@ export function Layout({ children }: { children: React.ReactNode }) {
       {children}
       <ScrollRestoration />
       <Scripts />
+      <script
+        dangerouslySetInnerHTML={{
+          __html: `window.ENV = ${JSON.stringify(ENV)}`
+        }}
+      />
     </>
   );
 }
 
 export default function App() {
-  return <Outlet />;
+  return (
+    <ClientOnly fallback={<div>Loading...</div>}>
+      {() => (
+        <AuthProvider>
+          <Outlet />
+          {/* Debug components removed */}
+        </AuthProvider>
+      )}
+    </ClientOnly>
+  );
 }

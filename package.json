@@ -17,7 +17,8 @@
     "start": "bindings=$(./bindings.sh) && wrangler pages dev ./build/client $bindings",
     "typecheck": "tsc",
     "typegen": "wrangler types",
-    "preview": "pnpm run build && pnpm run start"
+    "preview": "pnpm run build && pnpm run start",
+    "db:generate": "node scripts/generate-migrations.js"
   },
   "engines": {
     "node": ">=18.18.0"
@@ -48,6 +49,7 @@
     "@remix-run/cloudflare": "^2.10.2",
     "@remix-run/cloudflare-pages": "^2.10.2",
     "@remix-run/react": "^2.10.2",
+    "@supabase/supabase-js": "^2.49.4",
     "@types/three": "^0.176.0",
     "@uiw/codemirror-theme-vscode": "^4.23.0",
     "@unocss/reset": "^0.61.0",
@@ -76,7 +78,8 @@
     "remix-utils": "^7.6.0",
     "shiki": "^1.9.1",
     "three": "^0.176.0",
-    "unist-util-visit": "^5.0.0"
+    "unist-util-visit": "^5.0.0",
+    "postgres": "^3.4.3"
   },
   "devDependencies": {
     "@blitz/eslint-plugin": "0.1.0",
@@ -86,10 +89,14 @@
     "@types/node": "^22.15.17",
     "@types/react": "^18.2.20",
     "@types/react-dom": "^18.2.7",
+    "drizzle-kit": "^0.31.1",
+    "drizzle-orm": "^0.43.1",
     "fast-glob": "^3.3.2",
     "is-ci": "^3.0.1",
     "node-fetch": "^3.3.2",
+    "pg": "^8.16.0",
     "prettier": "^3.3.2",
+    "supabase": "^2.22.12",
     "typescript": "^5.5.2",
     "unified": "^11.0.5",
     "unocss": "^0.61.3",

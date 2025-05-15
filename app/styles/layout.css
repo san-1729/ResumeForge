@@ -1,0 +1,106 @@
+:root {
+  --header-height: 56px;
+  --chat-width: 100%;
+  --chat-max-width: 800px;
+  --workbench-width: 60%;
+  --chat-width-with-workbench: 40%;
+  --transition-timing: cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-duration: 0.3s;
+}
+
+/* Main layout structure */
+#mcg-main-layout {
+  display: flex;
+  flex-direction: row;
+  height: 100%;
+  position: relative;
+}
+
+/* Chat container - shrinks when workbench is visible */
+#mcg-chat-container {
+  flex: 1 1 auto;
+  transition: flex-basis var(--transition-duration) var(--transition-timing),
+              width var(--transition-duration) var(--transition-timing);
+  min-width: 0; /* Prevent flex items from overflowing */
+  padding-right: 0.5rem;
+  overflow-y: auto; /* Make chat scrollable */
+  max-height: calc(100vh - var(--header-height)); /* Prevent expansion beyond viewport */
+}
+
+/* Workbench container - grows when visible */
+#mcg-workbench-container {
+  height: 100%;
+  overflow: hidden;
+  padding: 0.5rem;
+  transition: width var(--transition-duration) var(--transition-timing),
+              opacity var(--transition-duration) var(--transition-timing);
+}
+
+/* ===== ONLY APPLY LAYOUT CHANGES WHEN CHAT HAS STARTED ===== */
+/* Use the data-chat-started attribute to target active chat only */
+
+/* Adjust layout when workbench is visible and chat has started */
+#mcg-main-layout[data-chat-started="true"] [data-workbench-visible="true"] #mcg-chat-container {
+  flex-basis: var(--chat-width-with-workbench);
+  max-width: var(--chat-width-with-workbench);
+}
+
+/* Return chat to normal when visible again and chat has started */
+#mcg-main-layout[data-chat-started="true"][data-chat-visible="true"] #mcg-chat-container {
+  flex-basis: var(--chat-width-with-workbench);
+  max-width: var(--chat-width-with-workbench);
+  padding-right: 0.5rem !important;
+  overflow-y: auto !important;
+  transition: all var(--transition-duration) var(--transition-timing);
+}
+
+/* Make chat full screen when workbench is hidden and chat has started */
+#mcg-main-layout[data-chat-started="true"][data-chat-visible="true"][data-workbench-visible="false"] #mcg-chat-container {
+  flex-basis: 100% !important;
+  max-width: 100% !important;
+  transition: all var(--transition-duration) var(--transition-timing);
+}
+
+/* Return workbench to normal size when chat visible and chat has started */
+#mcg-main-layout[data-chat-started="true"][data-chat-visible="true"] #mcg-workbench-container {
+  flex: 0 0 var(--workbench-width);
+  width: var(--workbench-width);
+  transition: all var(--transition-duration) var(--transition-timing);
+}
+
+/* Handle hidden chat panel (full-screen workbench) - only when chat has started */
+#mcg-main-layout[data-chat-started="true"][data-chat-visible="false"] #mcg-chat-container {
+  flex-basis: 0 !important;
+  max-width: 0 !important;
+  padding: 0 !important;
+  overflow: hidden !important;
+  transition: all var(--transition-duration) var(--transition-timing);
+}
+
+/* Expand workbench when chat is hidden - only when chat has started */
+#mcg-main-layout[data-chat-started="true"][data-chat-visible="false"] #mcg-workbench-container {
+  flex: 1 1 100% !important;
+  width: 100% !important;
+  transition: all var(--transition-duration) var(--transition-timing);
+}
+
+/* Center content on landing page (when chat hasn't started) */
+#mcg-main-layout:not([data-chat-started="true"]) #mcg-chat-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 0 auto;
+  max-width: unset;
+}
+
+/* Chat content container */
+.chat-container {
+  max-width: 100%;
+  transition: max-width var(--transition-duration) var(--transition-timing),
+              width var(--transition-duration) var(--transition-timing);
+}
+
+/* Ensure transitions are smooth */
+.chat-panel, .workbench-panel {
+  transition: all var(--transition-duration) var(--transition-timing);
+}
