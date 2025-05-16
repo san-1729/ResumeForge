@@ -38,13 +38,14 @@ export const LinkedInImportDialog: React.FC<LinkedInImportDialogProps> = ({
   if (!isOpen) return null;
 
   const handleImport = async () => {
-    console.log('[LinkedIn Import] Process started with URL:', profileUrl);
+    console.log('🔵 [LinkedIn Import] IMPORT PROCESS STARTED');
+    console.log('🔵 [LinkedIn Import] Step 1: Initiating import with URL:', profileUrl);
     setIsLoading(true);
     setError(null);
     
     try {
       // Step 1: Fetch LinkedIn profile data
-      console.log('[LinkedIn Import] Sending request to API endpoint...');
+      console.log('🔵 [LinkedIn Import] Step 2: Fetching LinkedIn profile from ProxyCurl API...');
       const fetchResponse = await fetch('/api/linkedin-profile', {
         method: 'POST',
         headers: {
@@ -53,59 +54,114 @@ export const LinkedInImportDialog: React.FC<LinkedInImportDialogProps> = ({
         body: JSON.stringify({ profileUrl }),
       });
       
-      console.log('[LinkedIn Import] Received API response with status:', fetchResponse.status);
+      console.log('📊 [LinkedIn Import] LinkedIn API response status:', fetchResponse.status);
       
       const responseData = await fetchResponse.json() as { data?: LinkedInProfile, error?: string };
-      console.log('[LinkedIn Import] Parsed API response');
+      console.log('✅ [LinkedIn Import] Successfully parsed API response');
       
       if (!fetchResponse.ok) {
-        console.error('[LinkedIn Import] API error:', responseData);
+        console.error('❌ [LinkedIn Import] LinkedIn API error:', responseData);
         throw new Error(responseData.error || 'Failed to fetch LinkedIn profile');
       }
+      console.log('✅ [LinkedIn Import] LinkedIn profile successfully retrieved');
       
       const profileData = responseData.data as LinkedInProfile;
-      console.log('[LinkedIn Import] Profile data successfully retrieved:', 
+      console.log('📊 [LinkedIn Import] Profile data preview:', 
         profileData ? {
           name: profileData.full_name,
           headline: profileData.headline,
+          currentPosition: profileData.experiences?.[0]?.title,
+          currentCompany: profileData.experiences?.[0]?.company,
           experienceCount: profileData.experiences?.length,
           educationCount: profileData.education?.length,
-          skillsCount: profileData.skills?.length
+          skillsCount: profileData.skills?.length,
+          dataSize: JSON.stringify(profileData).length + ' bytes'
         } : 'No data'
       );
       
       // Step 2: Save the profile data
-      console.log('[LinkedIn Import] Saving profile to server storage...');
+      console.log('🔵 [LinkedIn Import] Step 3: Saving profile to database via server API...');
+      // Log all available auth related cookies for debugging
+      console.log('📝 [LinkedIn Import] DEBUG - All cookies:', document.cookie);
+      
+      // Check each possible Supabase auth cookie format
+      const hasLegacyToken = document.cookie.includes('supabase-auth-token');
+      const hasJwtToken = document.cookie.includes('sb-') && document.cookie.includes('auth-token');
+      const hasSessionToken = document.cookie.includes('_session');
+      
+      console.log('📝 [LinkedIn Import] DEBUG - Auth cookie details:', {
+        hasLegacyToken,
+        hasJwtToken,
+        hasSessionToken,
+        cookieCount: document.cookie.split(';').length
+      });
+      
+      // Get the auth header from localStorage as backup
+      let authHeader = '';
+      let sbAccessToken = '';
+      try {
+        // Look for Supabase auth in localStorage
+        const sbKey = Object.keys(localStorage).find(k => k.startsWith('sb-'));
+        if (sbKey) {
+          const sbData = JSON.parse(localStorage.getItem(sbKey) || '{}');
+          sbAccessToken = sbData?.access_token || '';
+          if (sbAccessToken) {
+            authHeader = `Bearer ${sbAccessToken}`;
+            console.log('📝 [LinkedIn Import] DEBUG - Found auth token in localStorage:', !!sbAccessToken);
+          }
+        }
+      } catch (e) {
+        console.log('📝 [LinkedIn Import] DEBUG - Error reading localStorage:', e);
+      }
+      
+      // Use any of the available auth indicators
+      const isAuthenticated = hasLegacyToken || hasJwtToken || hasSessionToken || !!authHeader;
+      console.log('📝 [LinkedIn Import] Authentication check - User is authenticated:', isAuthenticated);
+      
+      console.log('📝 [LinkedIn Import] DEBUG - Preparing request with auth:', !!authHeader);
+      
       const saveResponse = await fetch('/api/save-profile', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          // Include auth token from localStorage if available
+          ...(authHeader && { 'Authorization': authHeader }),
+          // Only add test header if not authenticated in development
+          ...((!isAuthenticated && window.location.hostname === 'localhost') && { 'X-Test-Mode': 'true' })
         },
         body: JSON.stringify(profileData),
       });
       
-      console.log('[LinkedIn Import] Save response status:', saveResponse.status);
-      const saveResult = await saveResponse.json() as { success?: boolean, error?: string, profileId?: string };
+      console.log('📊 [LinkedIn Import] Database save response status:', saveResponse.status);
+      const saveResult = await saveResponse.json() as { success?: boolean, error?: string, profileId?: string, versionId?: string };
       
       if (!saveResponse.ok) {
-        console.error('[LinkedIn Import] Profile save error:', saveResult);
+        console.error('❌ [LinkedIn Import] Profile database save error:', saveResult);
         throw new Error(saveResult.error || 'Failed to save LinkedIn profile');
       }
       
-      console.log('[LinkedIn Import] Profile saved successfully with ID:', saveResult.profileId);
+      console.log('✅ [LinkedIn Import] Profile saved successfully to database');
+      console.log('📊 [LinkedIn Import] Database record details:', {
+        profileId: saveResult.profileId,
+        versionId: saveResult.versionId,
+        name: profileData.full_name,
+        timestamp: new Date().toISOString()
+      });
       
       // Step 3: Update the global store
-      console.log('[LinkedIn Import] Updating global state with LinkedIn data...');
+      console.log('🔵 [LinkedIn Import] Step 4: Updating global application state...');
       setLinkedInProfile(profileData);
       
       // Step 4: Show profile data preview
-      console.log('[LinkedIn Import] Showing profile data preview');
+      console.log('🔵 [LinkedIn Import] Step 5: Showing profile data preview to user');
       setFetchedProfile(profileData);
       setCurrentStep('preview');
       toast.success('LinkedIn profile imported successfully!');
+      console.log('✨ [LinkedIn Import] IMPORT PROCESS COMPLETED SUCCESSFULLY');
       
     } catch (err: any) {
-      console.error('[LinkedIn Import] Error during import process:', err);
+      console.error('❌ [LinkedIn Import] ERROR DURING IMPORT PROCESS:', err);
+      console.error('❌ [LinkedIn Import] IMPORT PROCESS FAILED');
       console.error('[LinkedIn Import] Error stack:', err.stack);
       
       // Check for specific API key related errors
@@ -120,7 +176,7 @@ export const LinkedInImportDialog: React.FC<LinkedInImportDialogProps> = ({
       
       setIsLoading(false);
     } finally {
-      console.log('[LinkedIn Import] Import process finished');
+      console.log('🔵 [LinkedIn Import] Import process complete, UI returned to ready state');
     }
   };
   
@@ -282,9 +338,9 @@ export const LinkedInImportDialog: React.FC<LinkedInImportDialogProps> = ({
                   Experience <span className="ml-2 text-xs bg-blue-900/50 text-blue-300 px-2 py-0.5 rounded-full">({experienceCount})</span>
                 </h5>
                 <div className="space-y-4">
-                  {fetchedProfile.experiences.slice(0, 3).map((exp, idx) => (
+                  {fetchedProfile.experiences?.slice(0, 3).map((exp, idx) => (
                     <div key={idx} className="relative pl-6 pb-2">
-                      {idx < fetchedProfile.experiences.length - 1 && idx < 2 && (
+                      {fetchedProfile.experiences && idx < fetchedProfile.experiences.length - 1 && idx < 2 && (
                         <div className="absolute left-[0.55rem] top-[1.75rem] bottom-0 w-0.5 bg-gray-700/50"></div>
                       )}
                       <div className="absolute left-0 top-1.5 w-3 h-3 rounded-full bg-blue-600/70 border border-blue-400/30"></div>
@@ -325,9 +381,9 @@ export const LinkedInImportDialog: React.FC<LinkedInImportDialogProps> = ({
                   Education <span className="ml-2 text-xs bg-blue-900/50 text-blue-300 px-2 py-0.5 rounded-full">({educationCount})</span>
                 </h5>
                 <div className="space-y-4">
-                  {fetchedProfile.education.slice(0, 2).map((edu, idx) => (
+                  {fetchedProfile.education?.slice(0, 2).map((edu, idx) => (
                     <div key={idx} className="relative pl-6 pb-2">
-                      {idx < fetchedProfile.education.length - 1 && idx < 1 && (
+                      {fetchedProfile.education && idx < fetchedProfile.education.length - 1 && idx < 1 && (
                         <div className="absolute left-[0.55rem] top-[1.75rem] bottom-0 w-0.5 bg-gray-700/50"></div>
                       )}
                       <div className="absolute left-0 top-1.5 w-3 h-3 rounded-full bg-blue-600/70 border border-blue-400/30"></div>
