@@ -11,6 +11,14 @@ You are a senior frontend developer assisting with the MCG (My Career Growth) pr
 
 (When in doubt ask the PM / tech lead before adding a new lib.)
 
+## Platform Compatibility
+
+MCG was originally built for Cloudflare deployment but has been modified to support Node.js environments like Vercel:
+
+1. **Database Access**: Uses a platform-agnostic Supabase adapter instead of Cloudflare-specific Drizzle ORM imports
+2. **API Endpoints**: API routes are compatible with both Cloudflare and Node.js runtimes
+3. **Environment Variables**: Required variables include `SUPABASE_URL` and `SUPABASE_ANON_KEY` for database access
+
 ## Project Overview & Core Frontend Technologies
 
 MCG leverages the following for its frontend:
@@ -26,21 +34,27 @@ MCG leverages the following for its frontend:
 (For a full project structure, see `project.mdc`)
 
 - `app/components/`: Contains all UI components.
-  - `chat/`: Chat interface components (`Chat.client.tsx`, `BaseChat.tsx`, `Messages.client.tsx`).
+  - `chat/`: Chat interface components (`Chat.client.tsx`, `BaseChat.tsx`, `Messages.client.tsx`, `LinkedInProfileDetails.client.tsx`).
   - `header/`: Application header (`Header.tsx`).
   - `sidebar/`: Navigation sidebar, history (`Menu.client.tsx`).
   - `ui/`: Shared, generic UI elements (`ResumeBackground.client.tsx`, `Dialog.tsx`, `IconButton.tsx`).
   - `workbench/`: Preview panel components (`Preview.tsx`, `Workbench.client.tsx`).
 - `app/routes/_index.tsx`: Main landing page, renders core layout.
+- `app/routes/api.*.ts`: API endpoints for LinkedIn profile data and other functionality.
 - `app/lib/hooks/`: Custom React hooks (e.g., `useMessageParser.ts`).
-- `app/lib/stores/`: Nanostores for global state (`chat.ts`, `workbench.ts`).
+- `app/lib/stores/`: Nanostores for global state (`chat.ts`, `workbench.ts`, `linkedin.ts`).
+- `app/lib/utils/`: Utility functions (`linkedInPromptBuilder.ts`).
 - `app/styles/`: Global styles and Tailwind configuration.
 
 ## High-Level Frontend Application Flow
 
 1.  **Landing (`app/routes/_index.tsx`)**: Renders `Header` and `Chat` components. `ResumeBackground.client.tsx` displays a Three.js animation.
 2.  **Prompt Handling (`app/components/chat/Chat.client.tsx`)**: User input is sent to `/api/chat`. The UI transitions to active chat mode.
-3.  **AI Response & Parsing**: The AI response (with `<mcgArtifact>` tags) is processed by `StreamingMessageParser` (used via `useMessageParser` hook in `Chat.client.tsx`).
+3.  **LinkedIn Integration**:
+    *   User can import LinkedIn profiles via the LinkedIn button in the chat interface
+    *   Profiles are retrieved from the Supabase database via API endpoints
+    *   LinkedIn data is formatted and included in prompts to create tailored resumes
+4.  **AI Response & Parsing**: The AI response (with `<mcgArtifact>` tags) is processed by `StreamingMessageParser` (used via `useMessageParser` hook in `Chat.client.tsx`).
 4.  **Action Execution & Preview (`app/components/workbench/Preview.tsx`)**:
     *   `ActionRunner` (in `app/lib/runtime/`) executes actions (file creation, server commands) in the WebContainer.
     *   `Preview.tsx` displays the resume from the WebContainer's dev server in an iframe.
@@ -77,25 +91,37 @@ When developing or asking the AI to develop frontend components and logic:
    - **Local Component State**: Use React hooks (`useState`, `useReducer`) for state confined to a single component or a small group of closely related components.
    - **Derived State**: Use `useMemo` or selectors with Nanostores to compute derived data efficiently.
 
-### 4. LLM Interaction & Artifacts (How the AI generates UI):
+### 4. API Integration:
+   - **Platform Compatibility**: Ensure API endpoints work across Cloudflare and Node.js environments
+   - **Authentication**: Include authentication headers when making API requests
+   - **Error Handling**: Implement proper error handling and provide useful error messages to users
+
+### 5. LinkedIn Profile Integration:
+   - **Components**: Use `LinkedInProfileDetails.client.tsx` for displaying profile data and `LinkedInProfilePrompt.client.tsx` for generating AI prompts
+   - **Data Flow**: Profile data is fetched from Supabase via the API endpoints and stored in the `linkedin.ts` store
+   - **Format**: Follow the standardized LinkedIn profile data structure when working with profile information
+   - **Usage**: LinkedIn data can be formatted and included in prompts to create highly tailored resumes
+
+### 6. LLM Interaction & Artifacts (How the AI generates UI):
    - The AI will generate resume content as HTML/CSS/JS files, often including a `package.json` and commands to run a dev server (like Vite).
    - These are wrapped in `<mcgArtifact>` tags, which are parsed by `StreamingMessageParser`.
    - `ActionRunner` then creates these files in the WebContainer.
    - **Your role**: You might ask the AI to "generate an HTML structure for a resume's education section using Tailwind CSS" or "update the `styles.css` to change the heading font."
 
-### 5. Resume Preview:
+### 7. Resume Preview:
    - The preview in `Preview.tsx` is an `<iframe>` pointing to the dev server in the WebContainer.
    - Typical resume template files created by the AI will be `index.html`, `styles.css`, and optionally `script.js`.
 
-### 6. Directory Structure:
+### 8. Directory Structure:
    - Place new UI components in appropriate subdirectories within `app/components/`.
    - General, reusable UI elements go into `app/components/ui/`.
    - Page-specific or feature-specific components might go into a directory related to that feature if not broadly reusable.
 
-### 7. General Principles:
+### 9. General Principles:
    - **Modularity**: Create small, reusable components where possible.
    - **Performance**: Be mindful of performance. Use `React.memo`, `useCallback`, `useMemo` where appropriate, especially for larger lists or frequently re-rendering components.
    - **Accessibility (a11y)**: Strive to make UI components accessible (semantic HTML, ARIA attributes where necessary, keyboard navigability).
+   - **Platform Compatibility**: Write code that works across both Cloudflare and Node.js environments, especially for database access and API endpoints.
 
 When asking the AI for help with frontend tasks, refer to these guidelines. For example: "Create a new React component `ExperienceCard.tsx` in `app/components/resume/` using Tailwind CSS, following our project's styling for section headers."
 

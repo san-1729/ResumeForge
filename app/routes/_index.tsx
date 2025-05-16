@@ -6,6 +6,7 @@ import { BaseChat } from '~/components/chat/BaseChat';
 import { Chat } from '~/components/chat/Chat.client';
 import { Header } from '~/components/header/Header';
 import { Workbench } from '~/components/workbench/Workbench.client';
+import { ChatWithLoginIndicator } from '~/components/chat/ChatWithLoginIndicator.client';
 
 export const meta: MetaFunction = () => {
   return [
@@ -30,7 +31,7 @@ export default function Index() {
         data-chat-started={chatStarted}
       >
         <div className="flex-grow flex min-w-0" id="mcg-chat-container">
-          <ClientOnly fallback={<BaseChat />}>{() => <Chat />}</ClientOnly>
+          <ClientOnly fallback={<ChatWithLoginIndicator />}>{() => <Chat />}</ClientOnly>
         </div>
         <ClientOnly>{() => <Workbench />}</ClientOnly>
       </div>

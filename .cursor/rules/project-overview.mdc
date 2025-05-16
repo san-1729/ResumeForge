@@ -11,6 +11,14 @@ This document outlines the user journey and the corresponding technical flow wit
 
 MCG helps users create professional, ATS-optimized resumes through an AI-powered chat interface. The AI generates resume content (HTML, CSS, JS) and instructions to run a development server within a WebContainer, which is then previewed in the application.
 
+## Platform Compatibility
+
+MCG was originally built for Cloudflare deployment but has been modified to support Node.js environments like Vercel:
+
+1. **Database Access**: Uses a platform-agnostic Supabase adapter instead of Cloudflare-specific Drizzle ORM imports
+2. **API Endpoints**: API routes are compatible with both Cloudflare and Node.js runtimes
+3. **Environment Variables**: Required variables include `SUPABASE_URL`, `SUPABASE_ANON_KEY`, and `SUPABASE_SERVICE_ROLE_KEY` for database access
+
 ## Authentication Flow (NEW)
 
 Before any chat interaction begins, MCG now verifies that the user is authenticated. The process is handled entirely on the client by `AuthProvider.client.tsx` and Supabase Auth:
@@ -40,17 +48,30 @@ sequenceDiagram
     participant WebContainerAPI as WebContainer API
     participant WorkbenchStore as stores/workbench.ts
     participant PreviewComp as workbench/Preview.tsx
+    participant LinkedInAPI as routes/api.linkedin-profile.*.ts
+    participant LinkedInStore as stores/linkedin.ts
 
     User->>BrowserUI: Opens MCG application
     BrowserUI->>IndexRoute: Loads main page
     IndexRoute->>BrowserUI: Renders Header & Chat components
     Note over BrowserUI,ChatClient: Chat UI (via BaseChat.tsx - *inferred*) shows initial state (e.g., example prompts)
 
-    User->>ChatClient: Types a resume request (e.g., "Create a resume for a software engineer") and submits
-    ChatClient->>ChatClient: `sendMessage` function is called
-    ChatClient->>WorkbenchStore: Calls `saveAllFiles()` (if any modifications)
-    ChatClient->>ChatClient: Prepares message (includes diffs if files were modified)
-    ChatClient->>ChatAPI: Sends message to `/api/chat` endpoint (using `useChat` hook from `ai/react`)
+    User->>ChatClient: Types a resume request or imports LinkedIn profile
+    alt Normal Message Flow
+        ChatClient->>ChatClient: `sendMessage` function is called
+        ChatClient->>WorkbenchStore: Calls `saveAllFiles()` (if any modifications)
+        ChatClient->>ChatClient: Prepares message (includes diffs if files were modified)
+        ChatClient->>ChatAPI: Sends message to `/api/chat` endpoint (using `useChat` hook from `ai/react`)
+    else LinkedIn Import Flow
+        ChatClient->>LinkedInAPI: Fetches user's LinkedIn profiles
+        LinkedInAPI->>ChatClient: Returns available profiles
+        User->>ChatClient: Selects a profile
+        ChatClient->>LinkedInAPI: Fetches latest version of selected profile
+        LinkedInAPI->>ChatClient: Returns profile data
+        ChatClient->>LinkedInStore: Stores profile data
+        ChatClient->>ChatClient: Formats LinkedIn data as resume prompt
+        ChatClient->>ChatAPI: Sends formatted LinkedIn data to `/api/chat`
+    end
 
     ChatAPI->>ChatAPI: `action()` function receives request
     ChatAPI->>LLMServer: Calls `streamText(messages, env, options)`
@@ -93,12 +114,14 @@ sequenceDiagram
                 *   `BaseChat` (from `bolt.new/app/components/chat/BaseChat.tsx`) likely serves as the presentational component for the chat UI, showing initial prompts or an empty state. *(File content for BaseChat.tsx was not fully read due to timeouts, this is an inference based on its usage and props from Chat.client.tsx).*
 
 2.  **User Submits a Prompt:**
-    *   **User Action:** Types a request into the chat input (e.g., "Create a professional software engineer resume") and submits.
+    *   **User Action:** Types a request into the chat input (e.g., "Create a professional software engineer resume") and submits, or uses the LinkedIn import feature to create a resume based on their LinkedIn profile.
     *   **Technical Flow (within `Chat.client.tsx`):**
         *   The `input` state (managed by `useChat` hook) holds the user's text.
         *   The `sendMessage` function (or a handler calling `append` from `useChat`) is triggered.
         *   Before sending, `workbenchStore.saveAllFiles()` is called to ensure any pending local changes are persisted.
         *   If `workbenchStore.getFileModifcations()` returns changes, a diff (formatted by `fileModificationsToHTML`) is prepended to the user's prompt. This ensures the AI has context of any manual edits.
+        *   If LinkedIn data is imported, the profile data is fetched via the API and formatted into a structured prompt using `linkedInPromptBuilder.ts`.
+        *   The message is prepared for sending. If files were modified, diffs may be included in the message for context.
         *   The `useChat` hook sends the (potentially augmented) prompt to the `/api/chat` endpoint.
         *   The local chat UI updates to show the user's message. `chatStore.setKey('started', true)` is set, which might hide example prompts.
 
@@ -162,144 +185,118 @@ This detailed flow should provide a solid foundation for understanding how MCG o
 
 ## Project Structure Overview
 
-Below is a more detailed look at the project's directory structure within `bolt.new/app/`. This should help in locating relevant files for development and understanding the organization of the codebase.
+Below is a more detailed look at the project's directory structure within `bolt.new/app/`. This structure reflects the current state with LinkedIn integration and platform compatibility for Vercel deployment. This should help in locating relevant files for development and understanding the organization of the codebase.
 
 ```text
 bolt.new/
 └── app/
-    ├── root.tsx
-    ├── entry.client.tsx
-    ├── entry.server.tsx
+    ├── root.tsx                 # Main app layout and setup
+    ├── entry.client.tsx         # Client-side entry point
+    ├── entry.server.tsx         # Server-side entry point
     ├── components/
+    │   ├── auth/
+    │   │   └── AuthProvider.client.tsx  # Handles authentication with Supabase
     │   ├── chat/
-    │   │   ├── Artifact.tsx
-    │   │   ├── AssistantMessage.tsx
-    │   │   ├── BaseChat.client.tsx  // Note: Corrected from BaseChat.tsx based on typical naming and usage
-    │   │   ├── BaseChat.module.scss
-    │   │   ├── Chat.client.tsx
-    │   │   ├── CodeBlock.module.scss
-    │   │   ├── CodeBlock.tsx
-    │   │   ├── Markdown.module.scss
-    │   │   ├── Markdown.tsx
-    │   │   ├── Messages.client.tsx
-    │   │   ├── SendButton.client.tsx
-    │   │   └── UserMessage.tsx
-    │   ├── editor/
-    │   │   └── codemirror/
-    │   │       ├── BinaryContent.tsx
-    │   │       ├── CodeMirrorEditor.tsx
-    │   │       ├── cm-theme.ts
-    │   │       ├── indent.ts
-    │   │       └── languages.ts
+    │   │   ├── BaseChat.tsx             # Core chat component
+    │   │   ├── Chat.client.tsx          # Client-side chat functionality
+    │   │   ├── LinkedInProfileDetails.client.tsx  # Displays LinkedIn profile data
+    │   │   ├── LinkedInProfilePrompt.client.tsx   # Generates AI prompts from LinkedIn data
+    │   │   ├── Messages.client.tsx       # Handles message rendering
+    │   │   └── ... (other chat components)
     │   ├── header/
-    │   │   ├── Header.tsx
-    │   │   └── HeaderActionButtons.client.tsx
+    │   │   └── Header.tsx               # App header with branding
     │   ├── sidebar/
-    │   │   ├── HistoryItem.tsx
-    │   │   ├── Menu.client.tsx
-    │   │   └── date-binning.ts
+    │   │   ├── Menu.client.tsx          # Navigation sidebar
+    │   │   └── ... (other sidebar components)
     │   ├── ui/
-    │   │   ├── Dialog.tsx
-    │   │   ├── IconButton.tsx
-    │   │   ├── LoadingDots.tsx
-    │   │   ├── PanelHeader.tsx
-    │   │   ├── PanelHeaderButton.tsx
-    │   │   ├── ResumeBackground.client.tsx
-    │   │   ├── Slider.tsx
-    │   │   └── ThemeSwitch.tsx
+    │   │   ├── Dialog.tsx               # Reusable dialog component
+    │   │   ├── IconButton.tsx           # Button with icon
+    │   │   ├── ResumeBackground.client.tsx  # Three.js background
+    │   │   └── ... (other UI components)
     │   └── workbench/
-    │       ├── EditorPanel.tsx
-    │       ├── FileBreadcrumb.tsx
-    │       ├── FileTree.tsx
-    │       ├── PortDropdown.tsx
-    │       ├── Preview.tsx
-    │       ├── Workbench.client.tsx
-    │       └── terminal/
-    │           ├── Terminal.tsx
-    │           └── theme.ts
-    ├── lib/
-    │   ├── .server/
-    │   │   └── llm/
-    │   │       ├── api-key.ts
-    │   │       ├── constants.ts
-    │   │       ├── model.ts
-    │   │       ├── prompts.ts
-    │   │       ├── stream-text.ts
-    │   │       └── switchable-stream.ts
+    │       ├── Preview.tsx              # Resume preview component
+    │       ├── Workbench.client.tsx     # Combines preview/editor
+    │       └── ... (other workbench components)
+        ├── lib/
+    │   ├── .server/              # Server-only code
+    │   │   └── llm/              # LLM integration
+    │   │       ├── prompts.ts    # System prompts for AI
+    │   │       └── stream-text.ts  # Handles streaming AI responses
+    │   ├── auth.server.ts        # Authentication logic with Supabase
+    │   ├── db.server.ts          # Platform-agnostic database adapter
     │   ├── hooks/
-    │   │   ├── index.ts
-    │   │   ├── useMessageParser.ts
-    │   │   ├── usePromptEnhancer.ts
-    │   │   ├── useShortcuts.ts
-    │   │   └── useSnapScroll.ts
-    │   ├── persistence/
-    │   │   ├── ChatDescription.client.tsx
-    │   │   ├── db.ts
-    │   │   ├── index.ts
-    │   │   └── useChatHistory.ts
+    │   │   ├── useLinkedInProfile.ts  # Hook for LinkedIn integration
+    │   │   ├── useMessageParser.ts     # Parses AI messages with mcgArtifacts
+    │   │   └── ... (other hooks)
     │   ├── runtime/
-    │   │   ├── __snapshots__/  (*Likely test snapshots, less relevant for typical dev*)
-    │   │   ├── action-runner.ts
-    │   │   ├── message-parser.spec.ts
-    │   │   └── message-parser.ts
-    │   ├── stores/
-    │   │   ├── chat.ts
-    │   │   ├── editor.ts
-    │   │   ├── files.ts
-    │   │   ├── previews.ts
-    │   │   ├── settings.ts
-    │   │   ├── terminal.ts
-    │   │   ├── theme.ts
-    │   │   └── workbench.ts
+    │   │   ├── action-runner.ts        # Executes actions from AI responses
+    │   │   └── message-parser.ts       # Parses message streams
+    │   ├── services/
+    │   │   ├── api.client.ts           # Frontend API client
+    │   │   └── linkedin.client.ts      # LinkedIn API client
+    │   ├── stores/                     # Nanostores for state management
+    │   │   ├── auth.ts                 # Authentication state
+    │   │   ├── chat.ts                 # Chat UI state
+    │   │   ├── linkedin.ts             # LinkedIn profile state
+    │   │   ├── workbench.ts            # Preview panel state
+    │   │   └── ... (other stores)
+    │   ├── supabase/                   # Supabase client configuration
+    │   │   ├── client.client.ts        # Browser client
+    │   │   └── server.ts               # Server client
+    │   └── utils/
+    │       ├── linkedInPromptBuilder.ts  # Formats LinkedIn data for prompts
+    │       └── ... (other utilities)
     │   ├── webcontainer/
     │   │   ├── auth.client.ts
-    │   │   └── index.ts
+{{ ... }}
     │   ├── crypto.ts
     │   └── fetch.ts
-    ├── routes/
-    │   ├── _index.tsx
-    │   ├── api.chat.ts
-    │   ├── api.enhancer.ts
-    │   └── chat.$id.tsx
+        ├── routes/
+    │   ├── _index.tsx                      # Main application page
+    │   ├── api.chat.ts                     # AI chat endpoint
+    │   ├── api.linkedin-profile.$id.latest.ts  # Get latest LinkedIn profile
+    │   ├── api.list-linkedin-profiles.ts   # List user's LinkedIn profiles
+    │   ├── api.resumes.ts                  # Resume CRUD operations
+    │   ├── api.resumes.$id.versions.ts     # Resume version management
+    │   ├── auth.callback.tsx               # Auth callback handler
+    │   └── ... (other API routes)
     ├── styles/
-    │   ├── animations.scss
-    │   ├── index.scss
-    │   ├── variables.scss
-    │   ├── z-index.scss
+    │   ├── global.css
     │   └── components/
     │       ├── animations.css
-    │       ├── background-animation.css
-    │       ├── code.scss
-    │       ├── editor.scss
-    │       ├── resize-handle.scss
-    │       ├── terminal.scss
-    │       └── toast.scss
+    │       └── ... (other style files)
     ├── types/
-    │   └── (*Contents not explicitly listed, but typically contains TypeScript type definitions*)
+    │   ├── actions.ts                    # Action system types
+    │   └── artifact.ts                   # AI artifact types
     └── utils/
-        ├── buffer.ts
-        ├── classNames.ts
-        ├── constants.ts
-        ├── debounce.ts
-        ├── diff.ts
-        ├── easings.ts
-        ├── logger.ts
-        ├── markdown.ts
-        ├── mobile.ts
-        ├── promises.ts
-        ├── react.ts
-        ├── shell.ts
-        ├── stripIndent.ts
-        ├── terminal.ts
-        └── unreachable.ts
+        ├── diff.ts                       # For code diffs
+        └── ... (other utilities)
+```
+
+### Key Files for LinkedIn Integration
+
+```text
+# API Endpoints
+app/routes/api.list-linkedin-profiles.ts       # Lists profiles for current user
+app/routes/api.linkedin-profile.$id.latest.ts  # Gets latest version of a profile
+
+# Components & UI
+app/components/chat/LinkedInProfileDetails.client.tsx  # Displays profile data
+app/components/chat/LinkedInProfilePrompt.client.tsx   # Creates prompts from profile
+app/components/chat/BaseChat.tsx                       # Integrates LinkedIn import UI
+
+# Data & State Management
+app/lib/db.server.ts                           # Platform-agnostic database adapter
+app/lib/stores/linkedin.ts                     # LinkedIn profile state store
+app/lib/utils/linkedInPromptBuilder.ts         # Formats LinkedIn data for AI
+app/lib/hooks/useLinkedInProfile.ts            # Hook for profile interaction
 ```
 
 ## Backend Persistence Layer (2025-05 update)
 
 MCG now stores all durable data in Supabase Postgres (no more IndexedDB).  
-Key code you'll touch most often:
-* `app/db/schema.ts` – Drizzle table definitions  
-* `supabase/migrations/20250615000000_init.sql` – SQL that created those tables  
+{{ ... }}
+* `app/db.server.ts` – Platform-agnostic adapter using Supabase SDK
 * `app/lib/services/api.client.ts` – helper that auto-adds the Supabase JWT  
 * REST routes: `/api/resumes`, `/api/linkedin-profiles`, `/api/templates` etc.
 
@@ -307,6 +304,20 @@ Runtime flow: when an AI artifact closes the hook in
 `useMessageParser.ts` reads `index.html` & `styles.css` from WebContainer and
 POSTs them to `/api/resumes` (first time) or `/api/resumes/<id>/versions`.
 `workbenchStore.resumeId` tracks the DB row.
+
+### LinkedIn Profile Integration
+
+MCG utilizes LinkedIn profile data for AI-powered resume generation:
+
+#### Data Flow
+1. **Profile Listing**: `/api/list-linkedin-profiles` endpoint returns available profiles for the logged-in user
+2. **Profile Data**: `/api/linkedin-profile/:id/latest` returns the latest version of a specific profile
+3. **Profile Storage**: Data is stored and retrieved from Supabase database
+
+#### Components
+- **LinkedInProfileDetails.client.tsx**: Displays LinkedIn profile data with tabbed interface for experiences, education, and skills
+- **LinkedInProfilePrompt.client.tsx**: Generates AI prompts from LinkedIn data
+- **linkedInPromptBuilder.ts**: Utility for dynamic prompt generation formatting LinkedIn data for optimal AI consumption
 
 ### What's next (roadmap extract)
 1. History sidebar will call `/api/resumes` to show saved work after login.

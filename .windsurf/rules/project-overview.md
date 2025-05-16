@@ -1,8 +1,7 @@
 ---
-description: 
-globs: 
-alwaysApply: false
+trigger: always_on
 ---
+
 # MCG (My Career Growth) - User and Technical Flow Documentation
 
 This document outlines the user journey and the corresponding technical flow within the MCG codebase. It aims to provide a comprehensive understanding for new team members.

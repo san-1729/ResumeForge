@@ -104,14 +104,16 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
             'Authorization': `Bearer ${token}`
           }
         });
-        const data = await response.json() as { profiles?: Array<{ id: string }>, count?: number, error?: string };
 
         if (!response.ok) {
-          throw new Error(data.error || 'Failed to check profiles');
+          throw new Error('Failed to check profiles');
         }
 
-        // If they have profiles, show the selector, otherwise show the import dialog
-        if (data.profiles && data.profiles.length > 0) {
+        const data = await response.json() as { profiles?: Array<{ id: string; profileUrl?: string }>, count?: number };
+        console.log('[LinkedIn UI] Profile API response:', data);
+
+        // If profiles exist, show selector, otherwise show import dialog
+        if (data && data.profiles && Array.isArray(data.profiles) && data.profiles.length > 0) {
           console.log(`[LinkedIn UI] Found ${data.profiles.length} existing profiles, showing selector`);
           setShowLinkedInSelector(true);
         } else {
@@ -143,37 +145,43 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
       }
     };
 
-    // Modify the original sendMessage to include LinkedIn data if available
+    // Modify the original sendMessage to include LinkedIn data in the backend prompt
+    // but keep it hidden from the UI
     const enhancedSendMessage = React.useCallback(
       (event: React.UIEvent, messageInput?: string) => {
         if (!sendMessage) return;
 
-        // If we have LinkedIn data, prefix the message with the formatted data
+        // Standard message content for the chat UI - just use the user's input text
+        const userMessage = messageInput || input;
+        
+        // Skip if message is empty
+        if (!userMessage || userMessage.trim() === '') return;
+        
         if (linkedInState.isImported && linkedInState.profileData) {
-          console.log('[LinkedIn UI] Including LinkedIn data in prompt');
-          console.log('[LinkedIn UI] LinkedIn data available for:', linkedInState.profileData.full_name);
-
+          // Format the LinkedIn data for inclusion in the AI prompt
           const linkedInText = formatLinkedInDataForPrompt(linkedInState.profileData);
-          console.log('[LinkedIn UI] Formatted LinkedIn data size:', linkedInText.length, 'characters');
-          console.log('[LinkedIn UI] LinkedIn data sections included:',
-            Object.keys(linkedInState.profileData || {})
-              .filter(key => linkedInState.profileData && linkedInState.profileData[key] !== undefined)
-              .join(', ')
-          );
+          console.log('🔵 [LinkedIn UI] Including LinkedIn data for user:', linkedInState.profileData.full_name);
+          console.log('🔵 [LinkedIn UI] Data size:', linkedInText.length, 'characters');
+          
+          // SOLUTION: Use the special mcgArtifact tags recognized by the message parser
+          // The message parser ignores content between these tags when displaying messages
+          // But the content is still sent to the AI for processing
+          const enhancedMessage = `<mcgArtifact id="linkedin-data" title="LinkedIn Data">
+${linkedInText}
+</mcgArtifact>
 
-          const userText = messageInput || input;
-          console.log('[LinkedIn UI] User message:', userText);
-
-          // Create a custom event to pass to sendMessage
+${userMessage}`;
+          
+          // Custom event to avoid preventDefault issues
           const customEvent = new Event('click') as any;
-
-          // Call sendMessage with the enhanced prompt
-          console.log('[LinkedIn UI] Sending enhanced prompt with LinkedIn data + user message');
-          sendMessage(customEvent, `${linkedInText}\n\n${userText}`);
+          
+          // Send the message with hidden LinkedIn data
+          console.log('✅ [LinkedIn UI] Sending enhanced prompt with hidden LinkedIn data');
+          sendMessage(customEvent, enhancedMessage);
         } else {
           // No LinkedIn data, use regular sendMessage
-          console.log('[LinkedIn UI] No LinkedIn data available, sending regular message');
-          sendMessage(event, messageInput);
+          console.log('⚠️ [LinkedIn UI] Regular message without LinkedIn data');
+          sendMessage(event, userMessage);
         }
       },
       [sendMessage, input, linkedInState]
@@ -252,7 +260,7 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
         </ClientOnly>
 
         <ClientOnly>{() => <Menu />}</ClientOnly>
-        <div ref={scrollRef} className="flex flex-1 overflow-hidden h-full">
+        <div ref={scrollRef} className="flex flex-1 h-full overflow-y-auto">
           <div
             className={classNames("flex flex-col flex-1 h-full transition-all duration-300", {
               'hidden': !showChat, // Completely hide when not visible

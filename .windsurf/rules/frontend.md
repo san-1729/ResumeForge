@@ -96,4 +96,3 @@ When developing or asking the AI to develop frontend components and logic:
    - **Performance**: Be mindful of performance. Use `React.memo`, `useCallback`, `useMemo` where appropriate, especially for larger lists or frequently re-rendering components.
    - **Accessibility (a11y)**: Strive to make UI components accessible (semantic HTML, ARIA attributes where necessary, keyboard navigability).
 
-When asking the AI for help with frontend tasks, refer to these guidelines. For example: "Create a new React component `ExperienceCard.tsx` in `app/components/resume/` using Tailwind CSS, following our project's styling for section headers."

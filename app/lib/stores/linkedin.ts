@@ -67,11 +67,42 @@ export const clearLinkedInProfile = () => {
   console.log('LinkedIn profile data cleared from global state');
 };
 
-// Helper to format LinkedIn data into a prompt-friendly format
-export const formatLinkedInDataForPrompt = (profile: LinkedInProfile): string => {
+/**
+ * Helper to format LinkedIn data into a prompt-friendly format for AI resume generation
+ * 
+ * The format can be easily customized by modifying the template strings below.
+ * Current format is a JSON-like structure that the AI can easily parse.
+ * 
+ * @param profile - The LinkedIn profile data to format
+ * @param customInstructions - Optional additional instructions for the AI
+ * @returns Formatted string to include in the AI prompt
+ */
+export const formatLinkedInDataForPrompt = (profile: LinkedInProfile, customInstructions?: string): string => {
   if (!profile) return '';
   
-  let formattedData = `=== LINKEDIN PROFILE INFORMATION ===\n\n`;
+  console.log('🔵 [LinkedIn Formatter] Formatting LinkedIn profile for prompt');
+  console.log('📊 [LinkedIn Formatter] Profile summary:', {
+    name: profile.full_name,
+    experiences: profile.experiences?.length || 0,
+    education: profile.education?.length || 0,
+    skills: profile.skills?.length || 0
+  });
+  
+  // --- CUSTOMIZATION SECTION: You can modify these template strings ---
+  
+  // Header section
+  const HEADER = `=== LINKEDIN PROFILE INFORMATION ===\n\n`;
+  
+  // Closing section with instructions for the AI
+  const CLOSING = `=== END OF LINKEDIN DATA ===\n\n` +
+    `Please use the above LinkedIn information to create a tailored resume that highlights my relevant experience and skills.` +
+    (customInstructions ? `\n\n${customInstructions}` : '') +
+    `\n\n`;
+  
+  // --- END CUSTOMIZATION SECTION ---
+  
+  // Start building the formatted data string
+  let formattedData = HEADER;
   
   // Basic information with JSON-like structure for clearer parsing by AI
   formattedData += `PERSONAL_INFO: {\n`;
@@ -89,6 +120,8 @@ export const formatLinkedInDataForPrompt = (profile: LinkedInProfile): string =>
   // Work experience
   const experiences = profile.experiences || [];
   if (experiences.length > 0) {
+    console.log(`📝 [LinkedIn Formatter] Processing ${experiences.length} work experiences`);
+    
     formattedData += `WORK_EXPERIENCE: [\n`;
     experiences.forEach((exp, index) => {
       formattedData += `  {\n`;
@@ -125,6 +158,8 @@ export const formatLinkedInDataForPrompt = (profile: LinkedInProfile): string =>
   // Education
   const education = profile.education || [];
   if (education.length > 0) {
+    console.log(`📚 [LinkedIn Formatter] Processing ${education.length} education entries`);
+    
     formattedData += `EDUCATION: [\n`;
     education.forEach((edu, index) => {
       formattedData += `  {\n`;
@@ -154,13 +189,16 @@ export const formatLinkedInDataForPrompt = (profile: LinkedInProfile): string =>
   
   // Skills
   if (profile.skills && profile.skills.length > 0) {
+    console.log(`🔧 [LinkedIn Formatter] Processing ${profile.skills.length} skills`);
+    
     formattedData += `SKILLS: [\n`;
     formattedData += profile.skills.map(skill => `  "${skill}"`).join(',\n');
     formattedData += `\n]\n\n`;
   }
   
-  formattedData += `=== END OF LINKEDIN DATA ===\n\n`;
-  formattedData += `Please use the above LinkedIn information to create a tailored resume that highlights my relevant experience and skills.\n\n`;
+  // Add the closing section
+  formattedData += CLOSING;
   
+  console.log('✅ [LinkedIn Formatter] Completed formatting LinkedIn data');
   return formattedData;
 }; 

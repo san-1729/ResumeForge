@@ -77,11 +77,22 @@ export default function AuthProvider({ children }: AuthProviderProps) {
     }
   };
   
-  // Check if user is already authenticated
+  // Check if user is already authenticated and set up auth state listeners
   useEffect(() => {
+    // Listen for custom event to show auth modal
+    const handleShowAuthModal = () => {
+      console.log('Auth modal show event triggered');
+      setShowAuthModal(true);
+    };
+    
+    document.addEventListener('mcg-show-auth-modal', handleShowAuthModal);
+    
+    // Set up auth state change listener
+    const supabase = createSupabaseClient();
+    let subscription: any = null;
+    
     const checkAuth = async () => {
       console.log('Checking authentication status...');
-      const supabase = createSupabaseClient();
       if (!supabase) {
         setIsLoading(false);
         setShowAuthModal(true);
@@ -113,28 +124,32 @@ export default function AuthProvider({ children }: AuthProviderProps) {
       }
     };
     
+    // Start auth check
     checkAuth();
     
-    // Set up auth state change listener
-    const supabase = createSupabaseClient();
-    if (!supabase) return;
-    
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        console.log('Auth state changed:', event);
-        if (event === 'SIGNED_IN' && session) {
-          setUser(session.user);
-          setShowAuthModal(false);
-        } else if (event === 'SIGNED_OUT') {
-          setUser(null);
-          setShowAuthModal(true);
+    // Only set up subscription if supabase client exists
+    if (supabase) {
+      const response = supabase.auth.onAuthStateChange(
+        (event, session) => {
+          console.log('Auth state changed:', event);
+          if (event === 'SIGNED_IN' && session) {
+            setUser(session.user);
+            setShowAuthModal(false);
+          } else if (event === 'SIGNED_OUT') {
+            setUser(null);
+            setShowAuthModal(true);
+          }
         }
-      }
-    );
+      );
+      subscription = response.data.subscription;
+    }
     
-    // Clean up subscription on unmount
+    // Clean up event listener and subscription
     return () => {
-      subscription.unsubscribe();
+      if (subscription) {
+        subscription.unsubscribe();
+      }
+      document.removeEventListener('mcg-show-auth-modal', handleShowAuthModal);
     };
   }, []);
   

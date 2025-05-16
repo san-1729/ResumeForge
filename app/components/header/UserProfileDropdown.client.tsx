@@ -57,11 +57,17 @@ export function UserProfileDropdown() {
   // Get user info on mount
   useEffect(() => {
     const fetchUserData = async () => {
+      console.log('Fetching user data for profile dropdown');
       const supabase = createSupabaseClient();
       if (!supabase) return;
       
       const { data: { session } } = await supabase.auth.getSession();
       if (session?.user) {
+        console.log('Session found:', {
+          id: session.user.id,
+          email: session.user.email,
+          metadata: session.user.user_metadata
+        });
         setUser(session.user);
         
         // Generate avatar URL from user email or use Gravatar if available
@@ -72,6 +78,8 @@ export function UserProfileDropdown() {
         if (emailHash) {
           setAvatarUrl(`https://www.gravatar.com/avatar/${emailHash}?d=mp&s=40`);
         }
+      } else {
+        console.log('No active session found in UserProfileDropdown');
       }
     };
     
@@ -93,12 +101,23 @@ export function UserProfileDropdown() {
   
   // Get display name - prefer username or first part of email
   let displayName = 'User';
+  let shortDisplayName = 'U';
+  
   if (user.user_metadata?.full_name) {
     displayName = user.user_metadata.full_name;
+    // Get initials from full name (up to 2 characters)
+    shortDisplayName = user.user_metadata.full_name
+      .split(' ')
+      .map((name: string) => name[0])
+      .join('')
+      .substring(0, 2)
+      .toUpperCase();
   } else if (user.email) {
     // Extract username from email (part before @)
     const emailParts = user.email.split('@');
     displayName = emailParts[0];
+    // Get first 3 characters of email username
+    shortDisplayName = emailParts[0].substring(0, 3).toUpperCase();
   }
   
   return (
@@ -131,7 +150,7 @@ export function UserProfileDropdown() {
             <span>{userInitial}</span>
           )}
         </div>
-        <span className="hidden sm:block text-xs font-medium text-bolt-elements-textSecondary">Account</span>
+        <span className="hidden sm:block text-xs font-medium text-bolt-elements-textSecondary">{shortDisplayName}</span>
         <div className={`i-ph:caret-down text-bolt-elements-textTertiary transition-transform ${isOpen ? 'rotate-180' : ''}`} />
       </button>
       

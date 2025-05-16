@@ -66,14 +66,33 @@ export const LinkedInProfileSelector: React.FC<LinkedInProfileSelectorProps> = (
           'Authorization': `Bearer ${token}`
         }
       });
-      const data = await response.json() as { profiles?: ProfileListItem[], count?: number, error?: string };
+      
+      // Parse JSON response only once
+      const data = await response.json() as { profiles?: any[], count?: number, error?: string };
       
       if (!response.ok) {
-        throw new Error(data.error || 'Failed to load profiles');
+        throw new Error(data?.error || `Failed to load profiles: ${response.status}`);
+      }
+      console.log('🔵 [LinkedIn Selector] Raw API response:', data);
+      
+      if (!data || !data.profiles) {
+        console.error('❌ [LinkedIn Selector] Invalid response format:', data);
+        throw new Error('Invalid response format from API');
       }
       
-      console.log(`✅ [LinkedIn Selector] Loaded ${data.count || 0} profiles`);
-      setProfiles(data.profiles || []);
+      // Transform API data into our expected format
+      const formattedProfiles = data.profiles.map(profile => ({
+        id: profile.id,
+        name: profile.fullName || 'LinkedIn Profile',  // Try to extract name from URL if not provided
+        headline: profile.headline || (profile.profileUrl ? `Profile from ${profile.profileUrl.split('/').pop()}` : undefined),
+        current_company: profile.currentCompany,
+        profileUrl: profile.profileUrl || profile.url,
+        createdAt: profile.createdAt || new Date().toISOString(),
+        versionCreatedAt: profile.updatedAt || profile.createdAt || new Date().toISOString()
+      }));
+      
+      console.log(`✅ [LinkedIn Selector] Loaded ${formattedProfiles.length} profiles:`, formattedProfiles);
+      setProfiles(formattedProfiles);
     } catch (err: any) {
       console.error('❌ [LinkedIn Selector] Error loading profiles:', err);
       setError(err.message || 'Failed to load LinkedIn profiles');
@@ -101,41 +120,57 @@ export const LinkedInProfileSelector: React.FC<LinkedInProfileSelectorProps> = (
         throw new Error('Not authenticated');
       }
       
-      // Get the latest version of this profile
+      console.log(`🔵 [LinkedIn Selector] Fetching profile detail from /api/linkedin-profile/${profileId}/latest`);
       const response = await fetch(`/api/linkedin-profile/${profileId}/latest`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
       });
-      const data = await response.json() as { data?: LinkedInProfile | string, error?: string };
       
       if (!response.ok) {
-        throw new Error(data.error || 'Failed to load profile data');
+        const errorText = await response.text();
+        console.error(`❌ [LinkedIn Selector] API error (${response.status}):`, errorText);
+        throw new Error(`Profile not found or unauthorized access (${response.status})`);
       }
       
-      console.log('✅ [LinkedIn Selector] Loaded profile data successfully');
+      const data = await response.json() as { data?: LinkedInProfile | string, error?: string };
+      console.log('🔵 [LinkedIn Selector] Raw profile data response:', data);
+      
+      if (!data.data) {
+        throw new Error('Profile data is empty or invalid');
+      }
       
       // Parse the profile data if it's a string
-      const profileData = typeof data.data === 'string' 
-        ? JSON.parse(data.data) as LinkedInProfile
-        : data.data as LinkedInProfile;
-      
-      if (!profileData) {
-        throw new Error('Profile data is empty');
+      let profileData: LinkedInProfile;
+      try {
+        profileData = typeof data.data === 'string' 
+          ? JSON.parse(data.data) as LinkedInProfile
+          : data.data as LinkedInProfile;
+      } catch (e) {
+        console.error('❌ [LinkedIn Selector] Error parsing profile data:', e);
+        throw new Error('Failed to parse profile data');
       }
       
-      // Update global store with selected profile
+      console.log('✅ [LinkedIn Selector] Profile data parsed successfully:', {
+        name: profileData.full_name,
+        headline: profileData.headline,
+        experiences: profileData.experiences?.length || 0,
+        skills: profileData.skills?.length || 0
+      });
+      
+      // Save the profile in the store
       setLinkedInProfile(profileData);
       
-      // Notify parent component
+      // Call the onProfileSelect callback
       onProfileSelect(profileData);
+      
+      // Close the dialog
       onClose();
       
-      toast.success(`LinkedIn profile loaded: ${profileData.full_name || 'Unknown'}`);
+      toast.success(`LinkedIn profile for ${profileData.full_name || 'user'} selected`);
     } catch (err: any) {
       console.error('❌ [LinkedIn Selector] Error loading profile data:', err);
-      setError(err.message || 'Failed to load profile data');
-      toast.error('Could not load the selected profile');
+      toast.error(`Could not load profile: ${err.message}`);
     }
   };
 
