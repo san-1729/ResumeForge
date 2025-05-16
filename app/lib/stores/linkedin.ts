@@ -25,6 +25,7 @@ export interface LinkedInProfile {
     school?: string;
     degree_name?: string;
     field_of_study?: string;
+    description?: string;
     starts_at?: {
       day?: number;
       month?: number;
@@ -41,33 +42,28 @@ export interface LinkedInProfile {
 }
 
 export interface LinkedInState {
-  profileData: LinkedInProfile | null;
   isImported: boolean;
+  profileData: LinkedInProfile | null;
+  importedAt?: number;
 }
 
 // Initial state
 export const linkedInStore = atom<LinkedInState>({
   profileData: null,
   isImported: false,
+  importedAt: undefined,
 });
 
 // Action to set profile data
 export const setLinkedInProfile = (profile: LinkedInProfile) => {
-  linkedInStore.set({
-    profileData: profile,
-    isImported: true,
-  });
-  
-  console.log('LinkedIn profile data stored in global state');
+  linkedInStore.set({ profileData: profile, isImported: true, importedAt: Date.now() });
+  console.log('LinkedIn profile data set in global state');
+  console.log('Data for:', profile.full_name);
 };
 
 // Action to clear profile data
 export const clearLinkedInProfile = () => {
-  linkedInStore.set({
-    profileData: null,
-    isImported: false,
-  });
-  
+  linkedInStore.set({ profileData: null, isImported: false, importedAt: undefined });
   console.log('LinkedIn profile data cleared from global state');
 };
 
@@ -75,72 +71,96 @@ export const clearLinkedInProfile = () => {
 export const formatLinkedInDataForPrompt = (profile: LinkedInProfile): string => {
   if (!profile) return '';
   
-  let formattedData = `LinkedIn Profile Information:\n\n`;
+  let formattedData = `=== LINKEDIN PROFILE INFORMATION ===\n\n`;
   
-  // Basic information
-  formattedData += `Name: ${profile.full_name || 'N/A'}\n`;
-  formattedData += `Headline: ${profile.headline || 'N/A'}\n`;
-  formattedData += `Occupation: ${profile.occupation || 'N/A'}\n\n`;
-  
-  // Summary
+  // Basic information with JSON-like structure for clearer parsing by AI
+  formattedData += `PERSONAL_INFO: {\n`;
+  formattedData += `  "name": "${profile.full_name || 'N/A'}",\n`;
+  formattedData += `  "headline": "${profile.headline || 'N/A'}",\n`;
+  formattedData += `  "occupation": "${profile.occupation || 'N/A'}",\n`;
+  formattedData += `  "location": "${profile.city || ''}, ${profile.country_full_name || ''}",\n`;
   if (profile.summary) {
-    formattedData += `Summary:\n${profile.summary}\n\n`;
+    // Clean up summary and make it JSON safe
+    const cleanSummary = profile.summary.replace(/"/g, '\'').replace(/\n/g, ' ');
+    formattedData += `  "summary": "${cleanSummary}"\n`;
   }
+  formattedData += `}\n\n`;
   
   // Work experience
-  if (profile.experiences && profile.experiences.length > 0) {
-    formattedData += `Work Experience:\n`;
-    profile.experiences.forEach((exp, index) => {
-      formattedData += `${index + 1}. ${exp.title || 'Role'} at ${exp.company || 'Company'}`;
+  const experiences = profile.experiences || [];
+  if (experiences.length > 0) {
+    formattedData += `WORK_EXPERIENCE: [\n`;
+    experiences.forEach((exp, index) => {
+      formattedData += `  {\n`;
+      formattedData += `    "title": "${exp.title || 'Role'}",\n`;
+      formattedData += `    "company": "${exp.company || 'Company'}",\n`;
       
       // Date range
       const startYear = exp.starts_at?.year;
-      const endYear = exp.ends_at?.year || 'Present';
-      if (startYear) {
-        formattedData += ` (${startYear} - ${endYear})`;
-      }
-      formattedData += `\n`;
+      const startMonth = exp.starts_at?.month;
+      const endYear = exp.ends_at?.year;
+      const endMonth = exp.ends_at?.month;
+      
+      formattedData += `    "start_date": "${startMonth ? startMonth + '/' : ''}${startYear || 'N/A'}",\n`;
+      formattedData += `    "end_date": "${endYear ? (endMonth ? endMonth + '/' : '') + endYear : 'Present'}",\n`;
       
       // Location
       if (exp.location) {
-        formattedData += `   Location: ${exp.location}\n`;
+        formattedData += `    "location": "${exp.location}",\n`;
       }
       
-      // Description
+      // Description - clean up for JSON
       if (exp.description) {
-        formattedData += `   Description: ${exp.description}\n`;
+        const cleanDesc = exp.description.replace(/"/g, '\'').replace(/\n/g, ' ');
+        formattedData += `    "description": "${cleanDesc}"\n`;
+      } else {
+        formattedData += `    "description": ""\n`;
       }
       
-      formattedData += `\n`;
+      formattedData += `  }${index < (profile.experiences?.length || 0) - 1 ? ',' : ''}\n`;
     });
+    formattedData += `]\n\n`;
   }
   
   // Education
-  if (profile.education && profile.education.length > 0) {
-    formattedData += `Education:\n`;
-    profile.education.forEach((edu, index) => {
-      formattedData += `${index + 1}. ${edu.school || 'Institution'}`;
-      
-      if (edu.degree_name || edu.field_of_study) {
-        formattedData += ` - ${edu.degree_name || ''} ${edu.field_of_study || ''}`;
-      }
+  const education = profile.education || [];
+  if (education.length > 0) {
+    formattedData += `EDUCATION: [\n`;
+    education.forEach((edu, index) => {
+      formattedData += `  {\n`;
+      formattedData += `    "school": "${edu.school || 'Institution'}",\n`;
+      formattedData += `    "degree": "${edu.degree_name || 'N/A'}",\n`;
+      formattedData += `    "field": "${edu.field_of_study || 'N/A'}",\n`;
       
       // Date range
       const startYear = edu.starts_at?.year;
-      const endYear = edu.ends_at?.year || 'Present';
-      if (startYear) {
-        formattedData += ` (${startYear} - ${endYear})`;
+      const endYear = edu.ends_at?.year;
+      
+      formattedData += `    "start_year": "${startYear || 'N/A'}",\n`;
+      formattedData += `    "end_year": "${endYear || 'Present'}",\n`;
+      
+      // Description - clean up for JSON
+      if (edu.description) {
+        const cleanDesc = edu.description.replace(/"/g, '\'').replace(/\n/g, ' ');
+        formattedData += `    "description": "${cleanDesc}"\n`;
+      } else {
+        formattedData += `    "description": ""\n`;
       }
       
-      formattedData += `\n`;
+      formattedData += `  }${index < (profile.education?.length || 0) - 1 ? ',' : ''}\n`;
     });
-    formattedData += `\n`;
+    formattedData += `]\n\n`;
   }
   
   // Skills
   if (profile.skills && profile.skills.length > 0) {
-    formattedData += `Skills: ${profile.skills.join(', ')}\n\n`;
+    formattedData += `SKILLS: [\n`;
+    formattedData += profile.skills.map(skill => `  "${skill}"`).join(',\n');
+    formattedData += `\n]\n\n`;
   }
+  
+  formattedData += `=== END OF LINKEDIN DATA ===\n\n`;
+  formattedData += `Please use the above LinkedIn information to create a tailored resume that highlights my relevant experience and skills.\n\n`;
   
   return formattedData;
 }; 
