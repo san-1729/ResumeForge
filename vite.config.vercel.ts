@@ -10,7 +10,11 @@ import { nodePolyfills } from 'vite-plugin-node-polyfills';
 import { optimizeCssModules } from 'vite-plugin-optimize-css-modules';
 import tsconfigPaths from 'vite-tsconfig-paths';
 
-export default defineConfig(({ ssrBuild, mode }) => {
+export default defineConfig((configEnv) => {
+  const { mode, isSsrBuild } = configEnv as any;
+  // Some Vite versions expose `ssrBuild`, ensure compatibility
+  const ssr = (configEnv as any).ssrBuild ?? isSsrBuild;
+
   return {
     build: {
       target: 'esnext',
@@ -19,7 +23,7 @@ export default defineConfig(({ ssrBuild, mode }) => {
       rollupOptions: {
         // Make sure server output is CommonJS to avoid ESM import issues
         output: {
-          format: ssrBuild ? 'cjs' : 'esm'
+          format: ssr ? 'cjs' : 'esm'
         }
       }
     },
