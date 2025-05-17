@@ -1,5 +1,5 @@
 import type { LinkedInProfile } from '~/lib/stores/linkedin';
-import { json } from '@remix-run/cloudflare';
+import { json } from '@remix-run/node';
 import { createClient } from '@supabase/supabase-js';
 import { createSupabaseClient } from '~/lib/supabase/client';
 import { requireUser } from '~/lib/auth.server';

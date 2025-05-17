@@ -3,8 +3,8 @@
  * Route: /api/linkedin-profile/:id/latest
  */
 
-import { json } from '@remix-run/cloudflare';
-import type { LoaderFunction, TypedResponse } from '@remix-run/cloudflare';
+import { json } from '@remix-run/node';
+import type { LoaderFunction, TypedResponse } from '@remix-run/node';
 import { createClient } from '@supabase/supabase-js';
 
 import { requireUser } from '~/lib/auth.server';

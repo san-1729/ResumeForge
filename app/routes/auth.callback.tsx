@@ -1,4 +1,4 @@
-import { redirect } from '@remix-run/cloudflare';
+import { redirect } from '@remix-run/node';
 import { useEffect } from 'react';
 import { useNavigate } from '@remix-run/react';
 import { createSupabaseClient } from '~/lib/supabase/client.client';

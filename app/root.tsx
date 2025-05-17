@@ -1,5 +1,5 @@
 import { useStore } from '@nanostores/react';
-import type { LinksFunction, MetaFunction, LoaderFunctionArgs } from '@remix-run/cloudflare';
+import type { LinksFunction, MetaFunction, LoaderFunctionArgs } from '@remix-run/node';
 import { Links, Meta, Outlet, Scripts, ScrollRestoration, useLoaderData } from '@remix-run/react';
 // Using Tailwind CSS as primary styling method per project requirements
 // import tailwindReset from '@unocss/reset/tailwind-compat.css?url';
@@ -7,7 +7,7 @@ import { themeStore } from './lib/stores/theme';
 import { stripIndents } from './utils/stripIndent';
 import { createHead } from 'remix-island';
 import { useEffect } from 'react';
-import { json } from '@remix-run/cloudflare';
+import { json } from '@remix-run/node';
 import { ClientOnly } from 'remix-utils/client-only';
 import AuthProvider from './components/auth/AuthProvider.client';
 // Debug components removed

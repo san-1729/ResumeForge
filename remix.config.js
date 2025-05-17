@@ -5,15 +5,11 @@ export default {
   ignoredRouteFiles: ["**/.*"],
   // When running in Vercel, we need to use the Vercel adapter
   serverModuleFormat: "cjs",
-  serverPlatform: process.env.VERCEL ? "node" : "cloudflare",
+  serverPlatform: "node",
   // Explicitly set the server entry for each platform so Remix bundles the correct file
-  server: process.env.VERCEL ? "./app/entry.server.node.tsx" : "./app/entry.server.tsx",
+  server: "./app/entry.server.node.tsx",
   // Use the Vercel adapter when deploying to Vercel
-  serverDependenciesToBundle: [
-    // Bundle all dependencies for Cloudflare deployment
-    // In Node.js, we can use node_modules directly
-    ...(process.env.VERCEL ? [] : ["all"])
-  ],
+  serverDependenciesToBundle: [],
   // Add your diagnostic routes
   routes: {
     // If you have additional routes to add, you can do so here

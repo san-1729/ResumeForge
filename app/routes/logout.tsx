@@ -1,4 +1,4 @@
-import { redirect } from "@remix-run/cloudflare";
+import { redirect } from "@remix-run/node";
 
 // Since we're handling logout on the client side in UserProfileDropdown.client.tsx,
 // this route just redirects back to the home page

@@ -1,5 +1,5 @@
-import { json } from '@remix-run/cloudflare';
-import type { ActionFunctionArgs, LoaderFunctionArgs } from '@remix-run/cloudflare';
+import { json } from '@remix-run/node';
+import type { ActionFunctionArgs, LoaderFunctionArgs } from '@remix-run/node';
 import { db } from '~/lib/db.server';
 import { resumes, resumeVersions } from '~/db/schema';
 import { requireUser } from '~/lib/auth.server';
