@@ -46,9 +46,16 @@ export function createServerSupabaseClient({ request, response, context }: Serve
   if (!supabaseUrl) supabaseUrl = process.env.SUPABASE_URL as string;
   if (!supabaseAnonKey) supabaseAnonKey = process.env.SUPABASE_ANON_KEY as string;
   
-  // Log information about what we found
+  // More detailed logging about the environment
+  console.log(`[DB DEBUG] NODE_ENV: ${process.env.NODE_ENV}`);
+  console.log(`[DB DEBUG] All available environment variables: ${Object.keys(process.env).join(', ')}`);
   console.log(`[DB DEBUG] SUPABASE_URL found: ${!!supabaseUrl}`);
   console.log(`[DB DEBUG] SUPABASE_ANON_KEY found: ${!!supabaseAnonKey}`);
+  
+  // Log the actual context object structure
+  console.log(`[DB DEBUG] Context keys: ${Object.keys(context || {}).join(', ')}`);
+  console.log(`[DB DEBUG] Context has SUPABASE_URL: ${context && 'SUPABASE_URL' in context}`);
+  console.log(`[DB DEBUG] Context has SUPABASE_ANON_KEY: ${context && 'SUPABASE_ANON_KEY' in context}`);
   
   // 3. If still not found, try to return a mock or fallback client
   if (!supabaseUrl || !supabaseAnonKey) {

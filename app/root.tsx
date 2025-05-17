@@ -25,9 +25,24 @@ import xtermStyles from '@xterm/xterm/css/xterm.css?url';
 export async function loader({ request }: LoaderFunctionArgs) {
   // Enhanced logging for debugging environment variables
   console.log('ROOT LOADER - Environment Variables Status:');
+  console.log('NODE_ENV:', process.env.NODE_ENV);
+  console.log('VERCEL:', process.env.VERCEL);
+  console.log('VERCEL_ENV:', process.env.VERCEL_ENV);
+  console.log('All available env vars:', Object.keys(process.env).join(', '));
   console.log('SUPABASE_URL exists:', !!process.env.SUPABASE_URL);
   console.log('SUPABASE_ANON_KEY exists:', !!process.env.SUPABASE_ANON_KEY);
   console.log('Request URL:', request.url);
+
+  // On Vercel, log what is available in the global namespace
+  if (process.env.VERCEL) {
+    console.log('Running on Vercel - checking global namespace');
+    try {
+      // @ts-ignore - checking if variables exist in global scope
+      console.log('SUPABASE_URL in global:', typeof SUPABASE_URL !== 'undefined');
+    } catch (e: any) {
+      console.log('Error checking global namespace:', e?.message || 'Unknown error');
+    }
+  }
 
   return json({
     ENV: {
