@@ -27,6 +27,14 @@ const getTheme = () => {
 
 const ABORT_DELAY = 5_000;
 
+// Add startup logging to help with debugging
+console.log('NODE SERVER STARTUP - Environment check:');
+console.log('NODE_ENV:', process.env.NODE_ENV);
+// Can't log request URL here as it's not available yet
+console.log('SUPABASE_URL exists:', !!process.env.SUPABASE_URL);
+console.log('SUPABASE_ANON_KEY exists:', !!process.env.SUPABASE_ANON_KEY);
+console.log('Server Platform: Node.js');
+
 export default function handleRequest(
   request: Request,
   responseStatusCode: number,

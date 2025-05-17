@@ -23,6 +23,12 @@ import xtermStyles from '@xterm/xterm/css/xterm.css?url';
 
 // Pass environment variables to the client
 export async function loader({ request }: LoaderFunctionArgs) {
+  // Enhanced logging for debugging environment variables
+  console.log('ROOT LOADER - Environment Variables Status:');
+  console.log('SUPABASE_URL exists:', !!process.env.SUPABASE_URL);
+  console.log('SUPABASE_ANON_KEY exists:', !!process.env.SUPABASE_ANON_KEY);
+  console.log('Request URL:', request.url);
+
   return json({
     ENV: {
       SUPABASE_URL: process.env.SUPABASE_URL,
@@ -96,7 +102,9 @@ export const Head = createHead(() => (
 ));
 
 export function Layout({ children }: { children: React.ReactNode }) {
-  const { ENV } = useLoaderData<typeof loader>();
+  // Make this more resilient to missing ENV vars
+  const loaderData = useLoaderData<typeof loader>();
+  const ENV = loaderData?.ENV || {};
   const theme = useStore(themeStore);
 
   useEffect(() => {
