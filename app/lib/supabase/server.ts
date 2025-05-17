@@ -35,33 +35,49 @@ function createMockSupabaseClient(): SupabaseClient {
   } as unknown as SupabaseClient;
 }
 
+// This special initialization pattern is used for Vercel compatibility
+let cachedSupabaseClient: SupabaseClient | null = null;
+
 export function createServerSupabaseClient({ request, response, context }: ServerSupabaseClientOptions): SupabaseClient {
-  console.log('🔵 [DB] Initializing Supabase connection using centralized env utility');
+  console.log('🔵 [DB] Initializing Supabase connection');
   
-  // Use our centralized environment utility to get Supabase credentials
-  const env = getServerEnv();
-  const supabaseUrl = env.SUPABASE_URL;
-  const supabaseAnonKey = env.SUPABASE_ANON_KEY;
+  // If we have a cached client, return it (helps with cold starts in serverless environments)
+  if (cachedSupabaseClient) {
+    console.log('[DB] Returning cached Supabase client');
+    return cachedSupabaseClient;
+  }
   
-  // Enhanced logging for diagnostic purposes
-  console.log(`[DB DEBUG] NODE_ENV: ${env.NODE_ENV}`);
+  // First try to get direct from context (Remix pattern) and fallback to process.env
+  let supabaseUrl = context?.SUPABASE_URL as string || process.env.SUPABASE_URL;
+  let supabaseAnonKey = context?.SUPABASE_ANON_KEY as string || process.env.SUPABASE_ANON_KEY;
+
+  // Enhanced debugging for Vercel environment
+  console.log(`[DB DEBUG] In Vercel: ${process.env.VERCEL === '1' ? 'Yes' : 'No'}`);
+  console.log(`[DB DEBUG] NODE_ENV: ${process.env.NODE_ENV}`);
   console.log(`[DB DEBUG] SUPABASE_URL found: ${!!supabaseUrl}`);
   console.log(`[DB DEBUG] SUPABASE_ANON_KEY found: ${!!supabaseAnonKey}`);
   
+  // Check all available environment variables for debugging
+  console.log(`[DB DEBUG] ENV KEYS: ${Object.keys(process.env).join(', ')}`);
+
   // If environment variables are missing, use appropriate fallbacks
   if (!supabaseUrl || !supabaseAnonKey) {
     console.log('⚠️ [DB] Missing required Supabase environment variables');
     
     // For non-production environments, use a mock client to prevent crashes
-    if (env.NODE_ENV !== 'production') {
+    if (process.env.NODE_ENV !== 'production') {
       console.log('⚠️ [DB] Using mock Supabase client for development');
       return createMockSupabaseClient();
     }
     
     // In production, we should still error out but with better error messages
     console.error('❌ [DB] Cannot proceed without Supabase credentials in production environment');
+    console.error('Please check that SUPABASE_URL and SUPABASE_ANON_KEY are set in Vercel project settings');
     throw new Error('Missing Supabase environment variables (SUPABASE_URL and SUPABASE_ANON_KEY)');
   }
+  
+  // Now that we have valid Supabase credentials, create the client
+  console.log('[DB] Creating Supabase client with valid credentials');
   
   // Extract cookies from the request to maintain the auth session
   const cookies = Object.fromEntries(
@@ -72,7 +88,7 @@ export function createServerSupabaseClient({ request, response, context }: Serve
   );
   
   // Create the Supabase client with auth context from cookies
-  return createClient(supabaseUrl, supabaseAnonKey, {
+  cachedSupabaseClient = createClient(supabaseUrl, supabaseAnonKey, {
     auth: {
       autoRefreshToken: false,
       persistSession: false,
@@ -84,4 +100,6 @@ export function createServerSupabaseClient({ request, response, context }: Serve
       },
     },
   });
+  
+  return cachedSupabaseClient;
 }
