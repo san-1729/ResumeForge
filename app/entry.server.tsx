@@ -1,12 +1,21 @@
 import type { AppLoadContext, EntryContext } from '@remix-run/cloudflare';
 import { RemixServer } from '@remix-run/react';
 import { isbot } from 'isbot';
-// Fix for CommonJS import issue on Vercel
-import ReactDOMServer from 'react-dom/server';
-const { renderToReadableStream } = ReactDOMServer;
+// Fix for CommonJS module compatibility - use default import and destructure
+import pkg from 'react-dom/server';
+const { renderToReadableStream } = pkg;
 import { renderHeadToString } from 'remix-island';
 import { Head } from './root';
-import { themeStore } from '~/lib/stores/theme';
+
+// Safely access theme store
+const getTheme = () => {
+  try {
+    const { themeStore } = require('./lib/stores/theme');
+    return themeStore?.value || 'light';
+  } catch (e) {
+    return 'light';
+  }
+};
 
 export default async function handleRequest(
   request: Request,
@@ -30,7 +39,7 @@ export default async function handleRequest(
       controller.enqueue(
         new Uint8Array(
           new TextEncoder().encode(
-            `<!DOCTYPE html><html lang="en" data-theme="${themeStore.value}"><head>${head}</head><body><div id="root" class="w-full h-full">`,
+            `<!DOCTYPE html><html lang="en" data-theme="${getTheme()}"><head>${head}</head><body><div id="root" class="w-full h-full">`,
           ),
         ),
       );
