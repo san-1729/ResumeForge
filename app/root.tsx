@@ -171,13 +171,33 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
 export default function App() {
   return (
-    <ClientOnly fallback={<div>Loading...</div>}>
-      {() => (
-        <AuthProvider>
-          <Outlet />
-          {/* Debug components removed */}
-        </AuthProvider>
-      )}
+    <ClientOnly fallback={
+      <div className="flex h-screen w-full items-center justify-center text-center">
+        <div>
+          <h2 className="text-2xl font-semibold mb-2">Loading MCG</h2>
+          <p className="text-gray-600">Please wait while we prepare your resume builder...</p>
+        </div>
+      </div>
+    }>
+      {() => {
+        try {
+          // Wrap in error boundary to catch any client-side rendering errors
+          return (
+            <AuthProvider>
+              <Outlet />
+            </AuthProvider>
+          );
+        } catch (error) {
+          console.error('Critical error rendering app:', error);
+          // Emergency fallback UI in case client-side rendering fails completely
+          return (
+            <div className="p-8">
+              <h1 className="text-2xl font-bold mb-4">MCG - My Career Growth</h1>
+              <Outlet />
+            </div>
+          );
+        }
+      }}
     </ClientOnly>
   );
 }

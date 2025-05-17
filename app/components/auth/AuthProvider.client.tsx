@@ -79,6 +79,10 @@ export default function AuthProvider({ children }: AuthProviderProps) {
   
   // Check if user is already authenticated and set up auth state listeners
   useEffect(() => {
+    // Prevent auth modal from showing immediately on initial load in production
+    const isProduction = window.location.hostname !== 'localhost' &&
+                       !window.location.hostname.includes('127.0.0.1');
+    
     // Listen for custom event to show auth modal
     const handleShowAuthModal = () => {
       console.log('Auth modal show event triggered');
@@ -88,14 +92,30 @@ export default function AuthProvider({ children }: AuthProviderProps) {
     document.addEventListener('mcg-show-auth-modal', handleShowAuthModal);
     
     // Set up auth state change listener
-    const supabase = createSupabaseClient();
+    // IMPORTANT: We need to handle the case where createSupabaseClient() fails
+    // This is a common issue during hydration or when environment variables aren't available
+    let supabase;
+    try {
+      supabase = createSupabaseClient();
+      console.log('[Auth] Supabase client created successfully:', !!supabase);
+    } catch (error) {
+      console.error('[Auth] Error creating Supabase client:', error);
+      // Set not loading and continue rendering the app without authentication
+      setIsLoading(false);
+      // Optionally, don't show auth modal immediately in production to avoid blocking the UX
+      setShowAuthModal(!isProduction);
+      return;
+    }
+
     let subscription: any = null;
     
     const checkAuth = async () => {
-      console.log('Checking authentication status...');
+      console.log('[Auth] Checking authentication status...');
       if (!supabase) {
+        console.log('[Auth] No Supabase client available, skipping auth check');
         setIsLoading(false);
-        setShowAuthModal(true);
+        // Optionally, don't show auth modal immediately in production to avoid blocking the UX
+        setShowAuthModal(!isProduction);
         return;
       }
 
