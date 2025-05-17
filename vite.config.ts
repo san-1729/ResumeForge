@@ -1,6 +1,5 @@
 import { cloudflareDevProxyVitePlugin as remixCloudflareDevProxy, vitePlugin as remixVitePlugin } from '@remix-run/dev';
 import { vercelPreset } from '@vercel/remix/vite';
-import UnoCSS from 'unocss/vite';
 import { defineConfig, type ViteDevServer } from 'vite';
 import { nodePolyfills } from 'vite-plugin-node-polyfills';
 import { optimizeCssModules } from 'vite-plugin-optimize-css-modules';
@@ -24,7 +23,8 @@ export default defineConfig((config) => {
         },
         presets: [vercelPreset()],
       }),
-      UnoCSS(),
+      // UnoCSS is disabled for Vercel deployment due to ESM compatibility issues
+      // This is fine since according to the project requirements, Tailwind CSS is the primary styling method
       tsconfigPaths(),
       chrome129IssuePlugin(),
       config.mode === 'production' && optimizeCssModules({ apply: 'build' }),
