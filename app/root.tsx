@@ -102,9 +102,19 @@ export const Head = createHead(() => (
 ));
 
 export function Layout({ children }: { children: React.ReactNode }) {
-  // Make this more resilient to missing ENV vars
-  const loaderData = useLoaderData<typeof loader>();
-  const ENV = loaderData?.ENV || {};
+  // COMPLETELY fallback-safe access to ENV variables
+  let ENV = {};
+  try {
+    // First attempt to get from loader data
+    const loaderData = useLoaderData<typeof loader>();
+    ENV = loaderData?.ENV || {};
+    console.log('[ROOT LAYOUT] Successfully loaded ENV from loader data:', !!ENV);
+  } catch (error) {
+    // If that fails for any reason, provide empty defaults
+    console.error('[ROOT LAYOUT] Error accessing loader data:', error);
+    ENV = {};
+  }
+  
   const theme = useStore(themeStore);
 
   useEffect(() => {

@@ -10,12 +10,59 @@ interface ServerSupabaseClientOptions {
 /**
  * Creates a Supabase client for server-side usage in Remix actions and loaders
  */
+/**
+ * Creates a mock Supabase client that won't crash the app when real credentials are missing
+ * This should only be used during development and testing
+ */
+function createMockSupabaseClient(): SupabaseClient {
+  // Return a mock client with stub methods that won't crash
+  return {
+    auth: {
+      getUser: () => Promise.resolve({ data: { user: null }, error: null }),
+      getSession: () => Promise.resolve({ data: { session: null }, error: null }),
+      signOut: () => Promise.resolve({ error: null }),
+      // Add other auth methods as stubs as needed
+    },
+    from: () => ({
+      select: () => ({
+        eq: () => Promise.resolve({ data: [], error: null }),
+        // Add other query chain methods as needed
+      })
+    }),
+    // Add minimal implementation to prevent crashes
+    // These won't actually work but will prevent the app from crashing
+  } as unknown as SupabaseClient;
+}
+
 export function createServerSupabaseClient({ request, response, context }: ServerSupabaseClientOptions): SupabaseClient {
-  const supabaseUrl = context.SUPABASE_URL as string;
-  const supabaseAnonKey = context.SUPABASE_ANON_KEY as string;
+  console.log('🔵 [DB] Initializing Supabase connection');
   
+  // Multiple fallback strategies for getting environment variables
+  // 1. Try from context first (standard Remix approach)
+  let supabaseUrl = context?.SUPABASE_URL as string;
+  let supabaseAnonKey = context?.SUPABASE_ANON_KEY as string;
+  
+  // 2. Try from process.env directly if not in context
+  if (!supabaseUrl) supabaseUrl = process.env.SUPABASE_URL as string;
+  if (!supabaseAnonKey) supabaseAnonKey = process.env.SUPABASE_ANON_KEY as string;
+  
+  // Log information about what we found
+  console.log(`[DB DEBUG] SUPABASE_URL found: ${!!supabaseUrl}`);
+  console.log(`[DB DEBUG] SUPABASE_ANON_KEY found: ${!!supabaseAnonKey}`);
+  
+  // 3. If still not found, try to return a mock or fallback client
   if (!supabaseUrl || !supabaseAnonKey) {
-    throw new Error('Missing Supabase environment variables');
+    console.error('❌ [DB] Error initializing database connection: Missing Supabase environment variables (SUPABASE_URL and SUPABASE_ANON_KEY)');
+    
+    // Instead of throwing an error, return a mock client that won't crash the app
+    // This is just for development/testing - in production you should set the env vars
+    if (process.env.NODE_ENV !== 'production') {
+      console.warn('⚠️ [DB] Using mock Supabase client for development - features requiring Supabase will not work');
+      return createMockSupabaseClient();
+    }
+    
+    // In production, still throw but with more information
+    throw new Error('Missing Supabase environment variables (SUPABASE_URL and SUPABASE_ANON_KEY)');
   }
   
   // Extract cookies from the request to maintain the auth session
