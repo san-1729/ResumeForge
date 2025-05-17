@@ -169,47 +169,108 @@ export function Layout({ children }: { children: React.ReactNode }) {
   );
 }
 
+// ULTRA MINIMAL EMERGENCY APP COMPONENT - NO CLIENT COMPONENTS AT ALL
 export default function App() {
-  // EMERGENCY PRODUCTION FIX: Skip all authentication and render directly
-  // This is a temporary measure to ensure the app renders in production
-  const isProduction = typeof window !== 'undefined' && 
-                      window.location.hostname !== 'localhost' &&
-                      !window.location.hostname.includes('127.0.0.1');
-  
   return (
-    <ClientOnly fallback={
-      <div className="flex h-screen w-full items-center justify-center text-center">
-        <div>
-          <h2 className="text-2xl font-semibold mb-2">Loading MCG</h2>
-          <p className="text-gray-600">Please wait while we prepare your resume builder...</p>
-        </div>
-      </div>
-    }>
-      {() => {
-        try {
-          // In production, bypass AuthProvider entirely as a temporary fix
-          if (isProduction) {
-            console.log('EMERGENCY MODE: Bypassing auth in production for reliability');
-            return <Outlet />;
-          }
-          
-          // Normal flow for development environments
-          return (
-            <AuthProvider>
-              <Outlet />
-            </AuthProvider>
-          );
-        } catch (error) {
-          console.error('Critical error rendering app:', error);
-          // Emergency fallback UI
-          return (
-            <div className="p-8">
-              <h1 className="text-2xl font-bold mb-4">MCG - My Career Growth</h1>
-              <Outlet />
+    <html lang="en" data-theme="light">
+      <head>
+        <meta charSet="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <title>MCG - My Career Growth</title>
+        <meta name="description" content="Create professional, ATS-optimized resumes with AI" />
+        <Links />
+      </head>
+      <body>
+        <div className="h-screen w-full flex flex-col">
+          {/* Simplified Header */}
+          <header className="flex items-center bg-white p-5 border-b shadow-sm">
+            <div className="flex items-center gap-3 text-gray-800">
+              <div className="p-2 rounded-lg bg-gradient-to-br from-blue-500 to-blue-600 text-white shadow-lg flex items-center justify-center">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
+                </svg>
+              </div>
+              <h1 className="text-2xl font-bold">
+                <span className="bg-gradient-to-r from-blue-500 via-blue-400 to-blue-500 bg-clip-text text-transparent drop-shadow-sm">MCG</span>
+              </h1>
             </div>
-          );
-        }
-      }}
-    </ClientOnly>
+            <div className="flex-1"></div>
+          </header>
+
+          {/* Main content */}
+          <main className="flex-1 flex">
+            {/* Sidebar */}
+            <div className="w-64 bg-gray-50 border-r p-4 hidden md:block">
+              <h2 className="font-semibold text-gray-500 mb-4">Resume Templates</h2>
+              <ul className="space-y-2">
+                <li className="p-2 bg-blue-50 rounded border border-blue-100 cursor-pointer hover:bg-blue-100 transition">Professional</li>
+                <li className="p-2 hover:bg-gray-100 rounded cursor-pointer transition">Modern</li>
+                <li className="p-2 hover:bg-gray-100 rounded cursor-pointer transition">Creative</li>
+                <li className="p-2 hover:bg-gray-100 rounded cursor-pointer transition">Academic</li>
+              </ul>
+            </div>
+
+            {/* Content Area */}
+            <div className="flex-1 flex flex-col">
+              {/* Chat Area */}
+              <div className="h-1/2 border-b p-4 flex flex-col">
+                <div className="flex-1 overflow-y-auto mb-4 bg-white rounded-lg p-6">
+                  <div className="flex items-start space-x-4 mb-6">
+                    <div className="p-2 rounded-full bg-blue-100 text-blue-600">
+                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z" />
+                      </svg>
+                    </div>
+                    <div className="flex-1">
+                      <p className="font-medium">MCG Assistant</p>
+                      <p className="text-gray-700">Welcome to MCG - My Career Growth! I can help you create professional, ATS-friendly resumes tailored to your career goals. How would you like to get started?</p>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="flex space-x-2">
+                  <input 
+                    type="text" 
+                    placeholder="Type your message here..." 
+                    className="flex-1 p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  />
+                  <button className="p-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M6 12L3.269 3.126A59.768 59.768 0 0121.485 12 59.77 59.77 0 013.27 20.876L5.999 12zm0 0h7.5" />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+              
+              {/* Resume Preview */}
+              <div className="h-1/2 p-4 bg-gray-50 flex justify-center items-center">
+                <div className="bg-white rounded-lg shadow-lg p-8 max-w-md w-full">
+                  <h2 className="text-2xl font-bold mb-2 text-center">Your Resume Preview</h2>
+                  <p className="text-gray-500 text-center mb-6">Resume content will appear here</p>
+                  <div className="border-t border-b py-2 mb-4">
+                    <div className="text-center">
+                      <h3 className="text-xl font-semibold">John Doe</h3>
+                      <p className="text-gray-600">Software Engineer</p>
+                    </div>
+                  </div>
+                  <div className="space-y-4">
+                    <div>
+                      <h4 className="font-medium border-b mb-2">Summary</h4>
+                      <p className="text-sm text-gray-600">Experienced software engineer with expertise in web technologies...</p>
+                    </div>
+                    <div>
+                      <h4 className="font-medium border-b mb-2">Experience</h4>
+                      <p className="text-sm text-gray-600">Sample experience details will appear here...</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </main>
+        </div>
+        
+        {/* No client-side scripts or hydration */}
+      </body>
+    </html>
   );
 }
