@@ -1,15 +1,29 @@
 /**
  * This is a specialized server entry point for Vercel deployment
+ * It's designed to be completely safe from client-side dependencies
  */
 import { PassThrough } from 'node:stream';
 import { createReadableStreamFromReadable } from '@remix-run/node';
 import type { AppLoadContext, EntryContext } from '@remix-run/node';
 import { RemixServer } from '@remix-run/react';
 import { isbot } from 'isbot';
-import { renderToPipeableStream } from 'react-dom/server';
+// Fix for CommonJS import issue on Vercel
+import ReactDOMServer from 'react-dom/server';
+const { renderToPipeableStream } = ReactDOMServer;
 import { renderHeadToString } from 'remix-island';
 import { Head } from './root';
-import { themeStore } from '~/lib/stores/theme';
+
+// Safe theme access that won't crash on the server
+const getTheme = () => {
+  try {
+    // Only try to access the store if it's safe
+    const { themeStore } = require('./lib/stores/theme');
+    return themeStore?.value || 'light';
+  } catch (e) {
+    // Fallback to light theme if there's any error
+    return 'light';
+  }
+};
 
 const ABORT_DELAY = 5_000;
 
@@ -61,7 +75,7 @@ function handleBotRequest(
             )
           );
 
-          body.write(`<!DOCTYPE html><html lang="en" data-theme="${themeStore.value}"><head>${head}</head><body><div id="root" class="w-full h-full">`);
+          body.write(`<!DOCTYPE html><html lang="en" data-theme="${getTheme()}"><head>${head}</head><body><div id="root" class="w-full h-full">`);
           pipe(body);
           body.write(`</div></body></html>`);
         },
@@ -105,7 +119,7 @@ function handleBrowserRequest(
             )
           );
 
-          body.write(`<!DOCTYPE html><html lang="en" data-theme="${themeStore.value}"><head>${head}</head><body><div id="root" class="w-full h-full">`);
+          body.write(`<!DOCTYPE html><html lang="en" data-theme="${getTheme()}"><head>${head}</head><body><div id="root" class="w-full h-full">`);
           pipe(body);
           body.write(`</div></body></html>`);
         },
