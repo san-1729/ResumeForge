@@ -1,7 +1,8 @@
 import { useStore } from '@nanostores/react';
 import type { LinksFunction, MetaFunction, LoaderFunctionArgs } from '@remix-run/cloudflare';
 import { Links, Meta, Outlet, Scripts, ScrollRestoration, useLoaderData } from '@remix-run/react';
-import tailwindReset from '@unocss/reset/tailwind-compat.css?url';
+// Using Tailwind CSS as primary styling method per project requirements
+// import tailwindReset from '@unocss/reset/tailwind-compat.css?url';
 import { themeStore } from './lib/stores/theme';
 import { stripIndents } from './utils/stripIndent';
 import { createHead } from 'remix-island';
@@ -17,7 +18,8 @@ import layoutStyles from './styles/layout.css?url';
 // Debug styles removed
 import xtermStyles from '@xterm/xterm/css/xterm.css?url';
 
-import 'virtual:uno.css';
+// UnoCSS is disabled for Vercel compatibility
+// import 'virtual:uno.css';
 
 // Pass environment variables to the client
 export async function loader({ request }: LoaderFunctionArgs) {
@@ -48,7 +50,8 @@ export const links: LinksFunction = () => [
     type: 'image/png',
   },
   { rel: 'stylesheet', href: reactToastifyStyles },
-  { rel: 'stylesheet', href: tailwindReset },
+  // Tailwind reset removed for Vercel compatibility
+  // { rel: 'stylesheet', href: tailwindReset },
   { rel: 'stylesheet', href: globalStyles },
   { rel: 'stylesheet', href: layoutStyles },
   // Debug styles removed
