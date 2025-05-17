@@ -8,8 +8,8 @@ import type { AppLoadContext, EntryContext } from '@remix-run/node';
 import { RemixServer } from '@remix-run/react';
 import { isbot } from 'isbot';
 
-// IMPORTANT: Use default import for CommonJS compatibility
-import * as ReactDOMServer from 'react-dom/server';
+// IMPORTANT: Import specific methods for CommonJS compatibility
+const ReactDOMServer = require('react-dom/server');
 import { renderHeadToString } from 'remix-island';
 import { Head } from './root';
 

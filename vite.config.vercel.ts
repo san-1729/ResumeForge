@@ -10,7 +10,7 @@ import { nodePolyfills } from 'vite-plugin-node-polyfills';
 import { optimizeCssModules } from 'vite-plugin-optimize-css-modules';
 import tsconfigPaths from 'vite-tsconfig-paths';
 
-export default defineConfig((config) => {
+export default defineConfig(({ ssrBuild, mode }) => {
   return {
     build: {
       target: 'esnext',
@@ -19,7 +19,7 @@ export default defineConfig((config) => {
       rollupOptions: {
         // Make sure server output is CommonJS to avoid ESM import issues
         output: {
-          format: config.isSsrBuild ? 'cjs' : 'esm'
+          format: ssrBuild ? 'cjs' : 'esm'
         }
       }
     },
@@ -48,7 +48,7 @@ export default defineConfig((config) => {
       // This is fine since Tailwind CSS is the primary styling method for MCG
       tsconfigPaths(),
       // Don't include the Chrome 129 plugin in production
-      config.mode === 'production' && optimizeCssModules({ apply: 'build' }),
+      mode === 'production' && optimizeCssModules({ apply: 'build' }),
     ].filter(Boolean),
   };
 });
