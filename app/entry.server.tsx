@@ -1,9 +1,9 @@
+// Cloudflare-specific entry server file
 import type { AppLoadContext, EntryContext } from '@remix-run/cloudflare';
 import { RemixServer } from '@remix-run/react';
 import { isbot } from 'isbot';
-// Fix for CommonJS module compatibility - use default import and destructure
-import pkg from 'react-dom/server';
-const { renderToReadableStream } = pkg;
+// For Cloudflare, we can directly use renderToReadableStream
+import { renderToReadableStream } from 'react-dom/server';
 import { renderHeadToString } from 'remix-island';
 import { Head } from './root';
 
@@ -49,7 +49,8 @@ export default async function handleRequest(
       function read() {
         reader
           .read()
-          .then(({ done, value }) => {
+          .then((result: ReadableStreamReadResult<Uint8Array>) => {
+            const { done, value } = result;
             if (done) {
               controller.enqueue(new Uint8Array(new TextEncoder().encode(`</div></body></html>`)));
               controller.close();
@@ -60,7 +61,7 @@ export default async function handleRequest(
             controller.enqueue(value);
             read();
           })
-          .catch((error) => {
+          .catch((error: unknown) => {
             controller.error(error);
             readable.cancel();
           });

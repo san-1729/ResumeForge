@@ -7,9 +7,9 @@ import { createReadableStreamFromReadable } from '@remix-run/node';
 import type { AppLoadContext, EntryContext } from '@remix-run/node';
 import { RemixServer } from '@remix-run/react';
 import { isbot } from 'isbot';
-// IMPORTANT: Use default import and destructuring for CommonJS compatibility
-import ReactDOMServer from 'react-dom/server';
-const { renderToPipeableStream } = ReactDOMServer;
+
+// IMPORTANT: Use default import for CommonJS compatibility
+import * as ReactDOMServer from 'react-dom/server';
 import { renderHeadToString } from 'remix-island';
 import { Head } from './root';
 
