@@ -1,0 +1,13 @@
+{
+  "buildCommand": "pnpm run build",
+  "devCommand": "pnpm run dev",
+  "installCommand": "pnpm install",
+  "framework": "remix",
+  "outputDirectory": "build/client",
+  "git": {
+    "deploymentEnabled": {
+      "main": false,
+      "feature/linkedin-profile-import": true
+    }
+  }
+}
