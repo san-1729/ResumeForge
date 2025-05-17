@@ -7,7 +7,7 @@
   "sideEffects": false,
   "scripts": {
     "deploy": "npm run build && wrangler pages deploy",
-    "build": "remix vite:build",
+    "build": "VITE_CONFIG_PATH=vite.config.vercel.ts remix vite:build",
     "build:vercel": "node scripts/vercel-build.cjs",
     "dev": "remix vite:dev",
     "test": "vitest --run",

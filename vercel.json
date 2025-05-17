@@ -1,5 +1,5 @@
 {
-  "buildCommand": "node vercel.build.js",
+  "buildCommand": "pnpm run build",
   "devCommand": "pnpm run dev",
   "installCommand": "pnpm install",
   "framework": "remix",

@@ -33,9 +33,9 @@ try {
   // Set an environment variable to use our Vercel-specific Vite config
   process.env.REMIX_VITE_CONFIG_PATH = path.resolve(__dirname, 'vite.config.vercel.ts');
   
-  // Run the Remix build with our specialized config
+  // Run the Remix build with our specialized config using npx
   console.log('🏗️ Running Remix build with Vercel-specific configuration...');
-  execSync('remix vite:build', { stdio: 'inherit', env: process.env });
+  execSync('npx remix vite:build', { stdio: 'inherit', env: process.env });
   console.log('✅ Remix build completed successfully');
 } catch (error) {
   console.error('❌ Build failed:', error);

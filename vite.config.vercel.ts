@@ -1,6 +1,7 @@
 /**
  * Simplified Vite config specifically for Vercel production deployment
- * This avoids ESM/CommonJS compatibility issues with UnoCSS and other packages
+ * This leverages Tailwind CSS as the primary styling method for MCG per project requirements
+ * and avoids ESM/CommonJS compatibility issues with UnoCSS
  */
 import { vitePlugin as remixVitePlugin } from '@remix-run/dev';
 import { vercelPreset } from '@vercel/remix/vite';
