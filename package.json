@@ -9,7 +9,7 @@
   "scripts": {
     "deploy": "npm run build && wrangler pages deploy",
     "build": "remix vite:build",
-    "build:vercel": "node scripts/vercel-build.js",
+    "build:vercel": "node scripts/vercel-build.cjs",
     "dev": "remix vite:dev",
     "test": "vitest --run",
     "test:watch": "vitest",

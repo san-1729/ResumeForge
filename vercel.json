@@ -1,5 +1,5 @@
 {
-  "buildCommand": "rm -rf .vercel/output && pnpm run build:vercel && node scripts/fix-vercel-build.js",
+  "buildCommand": "rm -rf .vercel/output && pnpm run build:vercel && node scripts/fix-vercel-build.cjs",
   "devCommand": "pnpm run dev",
   "installCommand": "pnpm install",
   "framework": "remix",

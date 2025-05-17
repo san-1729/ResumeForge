@@ -1,7 +1,7 @@
 /**
  * @type {import('@remix-run/dev').AppConfig}
  */
-module.exports = {
+export default {
   ignoredRouteFiles: ["**/.*"],
   // When running in Vercel, we need to use the Vercel adapter
   serverModuleFormat: "cjs",
