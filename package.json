@@ -83,6 +83,10 @@
     "three": "^0.176.0",
     "unist-util-visit": "^5.0.0"
   },
+  "optionalDependencies": {
+    "bufferutil": "^4.0.8",
+    "utf-8-validate": "^6.0.3"
+  },
   "devDependencies": {
     "@blitz/eslint-plugin": "0.1.0",
     "@cloudflare/workers-types": "^4.20240620.0",
