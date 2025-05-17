@@ -42,6 +42,11 @@ export const links: LinksFunction = () => [
     href: '/favicon.svg',
     type: 'image/svg+xml',
   },
+  {
+    rel: 'icon',
+    href: '/favicon.png',
+    type: 'image/png',
+  },
   { rel: 'stylesheet', href: reactToastifyStyles },
   { rel: 'stylesheet', href: tailwindReset },
   { rel: 'stylesheet', href: globalStyles },
