@@ -9,21 +9,30 @@ import * as schema from '~/db/schema';
 // Initialize database connection
 let db: any;
 
+// HARDCODED CREDENTIALS - TEMPORARY SOLUTION FOR VERCEL DEPLOYMENT
+// This should be removed once environment variables are working correctly
+const HARDCODED_SUPABASE_URL = 'https://xlfwyjwlrcwxylzvvcyz.supabase.co';
+const HARDCODED_SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhsZnd5andscmN3eHlsenZ2Y3l6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDcyMTk1ODYsImV4cCI6MjA2Mjc5NTU4Nn0.4nCgzoaxA--dAm7XVTBwfyciNnVOmMEYfxKFgW5gB3g';
+
 try {
-  console.log('🔵 [DB] Initializing Supabase connection');
+  console.log('🔵 [DB] Initializing Supabase connection (db.server.ts) - WITH HARDCODED FAILSAFE');
   
-  // Check for Supabase credentials
-  if (!process.env.SUPABASE_URL || !process.env.SUPABASE_ANON_KEY) {
-    throw new Error('Missing Supabase environment variables (SUPABASE_URL and SUPABASE_ANON_KEY)');
+  let supabaseUrl = process.env.SUPABASE_URL;
+  let supabaseAnonKey = process.env.SUPABASE_ANON_KEY;
+  
+  // Check for Supabase credentials, use hardcoded values as fallback
+  if (!supabaseUrl || !supabaseAnonKey) {
+    console.log('⚠️ [DB] Missing Supabase environment variables - using HARDCODED credentials');
+    supabaseUrl = HARDCODED_SUPABASE_URL;
+    supabaseAnonKey = HARDCODED_SUPABASE_ANON_KEY;
+  } else {
+    console.log('✅ [DB] Found environment variables for Supabase');
   }
   
-  // Create Supabase client
-  const supabase = createClient(
-    process.env.SUPABASE_URL,
-    process.env.SUPABASE_ANON_KEY
-  );
+  // Create Supabase client with resolved credentials
+  const supabase = createClient(supabaseUrl, supabaseAnonKey);
   
-  console.log('✅ [DB] Supabase client created');
+  console.log('✅ [DB] Supabase client created successfully');
   
   // Create a database adapter that works similarly to the original Drizzle interface
   db = {
