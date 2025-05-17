@@ -1,17 +1,21 @@
 /**
  * This is a specialized server entry point for Vercel deployment
- * It's designed to be completely safe from client-side dependencies
+ * It's designed to be completely safe from client-side dependencies and CommonJS compatible
  */
-import { PassThrough } from 'node:stream';
-import { createReadableStreamFromReadable } from '@remix-run/node';
-import type { AppLoadContext, EntryContext } from '@remix-run/node';
-import { RemixServer } from '@remix-run/react';
-import { isbot } from 'isbot';
-// Fix for CommonJS import issue on Vercel
-import ReactDOMServer from 'react-dom/server';
+// Use CommonJS-compatible imports for Vercel Node.js environment
+const { PassThrough } = require('node:stream');
+const { createReadableStreamFromReadable } = require('@remix-run/node');
+const { RemixServer } = require('@remix-run/react');
+const { isbot } = require('isbot');
+const React = require('react');
+// Explicitly use CommonJS require for React DOM server
+const ReactDOMServer = require('react-dom/server');
 const { renderToPipeableStream } = ReactDOMServer;
-import { renderHeadToString } from 'remix-island';
-import { Head } from './root';
+const { renderHeadToString } = require('remix-island');
+// Import types separately to avoid mixing import styles
+import type { AppLoadContext, EntryContext } from '@remix-run/node';
+// Root component needs to be imported this way because it uses JSX
+const { Head } = require('./root');
 
 // Safe theme access that won't crash on the server
 const getTheme = () => {

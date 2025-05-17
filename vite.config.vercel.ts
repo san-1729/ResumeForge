@@ -14,6 +14,23 @@ export default defineConfig((config) => {
   return {
     build: {
       target: 'esnext',
+      // Force the server build to use CommonJS for Vercel compatibility
+      // This is critical for fixing the "Cannot use import statement outside a module" error
+      rollupOptions: {
+        // Make sure server output is CommonJS to avoid ESM import issues
+        output: {
+          format: config.isSsrBuild ? 'cjs' : 'esm'
+        }
+      }
+    },
+    // Configure JSX runtime to use CommonJS format for server builds
+    esbuild: {
+      jsx: 'automatic',
+      jsxImportSource: 'react',
+    },
+    ssr: {
+      // Ensure server builds can handle both ESM and CommonJS modules
+      noExternal: ['react', 'react-dom', 'react/jsx-runtime'],
     },
     plugins: [
       nodePolyfills({
