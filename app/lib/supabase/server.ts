@@ -41,84 +41,67 @@ function createMockSupabaseClient(): SupabaseClient {
   } as unknown as SupabaseClient;
 }
 
-// This special initialization pattern is used for Vercel compatibility
+// Hardcoded Supabase client for Vercel deployment issue
+// IMPORTANT: This is a temporary solution and should be removed once environment variables are working
 let cachedSupabaseClient: SupabaseClient | null = null;
 
+// Always use the failsafe credentials for Vercel deployment - this is TEMPORARY
+// In a normal situation, we would NEVER hardcode these values
+const SUPABASE_URL = 'https://xlfwyjwlrcwxylzvvcyz.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhsZnd5andscmN3eHlsenZ2Y3l6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDcyMTk1ODYsImV4cCI6MjA2Mjc5NTU4Nn0.4nCgzoaxA--dAm7XVTBwfyciNnVOmMEYfxKFgW5gB3g';
+
+// This is purely for diagnostic purposes
 export function createServerSupabaseClient({ request, response, context }: ServerSupabaseClientOptions): SupabaseClient {
-  console.log('🔵 [DB] Initializing Supabase connection');
+  console.log('🔵 [DB] Initializing Supabase connection - ULTRA HARDCODED VERSION');
   
-  // If we have a cached client, return it (helps with cold starts in serverless environments)
+  // If we have a cached client, return it
   if (cachedSupabaseClient) {
     console.log('[DB] Returning cached Supabase client');
     return cachedSupabaseClient;
   }
   
-  // Multiple fallback strategies for getting environment variables
-  // 1. First try context (standard Remix pattern)
-  let supabaseUrl = context?.SUPABASE_URL as string;
-  let supabaseAnonKey = context?.SUPABASE_ANON_KEY as string;
+  // Try to get environment variables (for diagnostic purposes only)
+  const envVars = {
+    VERCEL: process.env.VERCEL,
+    NODE_ENV: process.env.NODE_ENV,
+    SUPABASE_URL_ENV: process.env.SUPABASE_URL,
+    SUPABASE_ANON_KEY_ENV: process.env.SUPABASE_ANON_KEY,
+    SUPABASE_URL_CONTEXT: context?.SUPABASE_URL,
+    SUPABASE_ANON_KEY_CONTEXT: context?.SUPABASE_ANON_KEY
+  };
   
-  // 2. If not in context, try process.env
-  if (!supabaseUrl) supabaseUrl = process.env.SUPABASE_URL as string;
-  if (!supabaseAnonKey) supabaseAnonKey = process.env.SUPABASE_ANON_KEY as string;
+  // Log everything for diagnostic purposes
+  console.log('[DB DEBUG] Environment:', JSON.stringify(envVars));
+  console.log('[DB DEBUG] ALL ENV KEYS:', Object.keys(process.env).join(', '));
+  console.log('[DB DEBUG] ALL CONTEXT KEYS:', Object.keys(context || {}).join(', '));
   
-  // Log information about environment variables
-  console.log(`[DB DEBUG] In Vercel: ${process.env.VERCEL === '1' ? 'Yes' : 'No'}`);
-  console.log(`[DB DEBUG] NODE_ENV: ${process.env.NODE_ENV}`);
-  console.log(`[DB DEBUG] SUPABASE_URL found: ${!!supabaseUrl}`);
-  console.log(`[DB DEBUG] SUPABASE_ANON_KEY found: ${!!supabaseAnonKey}`);
+  // ULTRA HARDCODED: Always use our hardcoded values for now
+  // This is TEMPORARY for debugging and should be removed
+  console.log('[DB] Using hardcoded Supabase credentials - TEMPORARY FIX');
   
-  
-  // 3. If still not found, use failsafe credentials
-  if (!supabaseUrl || !supabaseAnonKey) {
-    // In production Vercel environment, use failsafe as last resort
-    if (process.env.NODE_ENV === 'production' && process.env.VERCEL === '1') {
-      console.log('⚠️ [DB] Using FAILSAFE credentials in production - please fix environment variables');
-      supabaseUrl = FAILSAFE_SUPABASE_URL;
-      supabaseAnonKey = FAILSAFE_SUPABASE_ANON_KEY;
-    } 
-    // In development, use a mock client instead
-    else if (process.env.NODE_ENV !== 'production') {
-      console.log('⚠️ [DB] Using mock Supabase client for development');
-      return createMockSupabaseClient();
-    }
-    // If we're in production but not Vercel, don't use failsafe
-    else {
-      console.error('❌ [DB] Cannot proceed without Supabase credentials in non-Vercel production');
-      throw new Error('Missing Supabase environment variables (SUPABASE_URL and SUPABASE_ANON_KEY)');
-    }
-  }
-  
-  // Final check - if we somehow still don't have credentials, show detailed error
-  if (!supabaseUrl || !supabaseAnonKey) {
-    console.error('❌ [DB] All fallback strategies failed to find Supabase credentials');
-    throw new Error('Missing Supabase environment variables and all fallbacks failed');
-  }
-  
-  // Now that we have valid Supabase credentials, create the client
-  console.log('[DB] Creating Supabase client with valid credentials');
-  
-  // Extract cookies from the request to maintain the auth session
-  const cookies = Object.fromEntries(
-    request.headers.get('cookie')?.split(';').map(cookie => {
-      const [key, value] = cookie.trim().split('=');
-      return [key, value];
-    }) || []
-  );
-  
-  // Create the Supabase client with auth context from cookies
-  cachedSupabaseClient = createClient(supabaseUrl, supabaseAnonKey, {
-    auth: {
-      autoRefreshToken: false,
-      persistSession: false,
-      detectSessionInUrl: false,
-    },
-    global: {
-      headers: {
-        cookie: request.headers.get('cookie') || '',
+  try {
+    // Create the client with our hardcoded credentials
+    cachedSupabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+      auth: {
+        autoRefreshToken: false,
+        persistSession: false,
+        detectSessionInUrl: false,
       },
-    },
-  });
+      global: {
+        headers: {
+          cookie: request.headers.get('cookie') || '',
+        },
+      },
+    });
+    
+    console.log('[DB] Successfully created Supabase client with hardcoded credentials');
+    return cachedSupabaseClient;
+  } catch (error) {
+    console.error('[DB] Error creating Supabase client:', error);
+    throw new Error('Failed to create Supabase client even with hardcoded credentials');
+  }
   
-  return cachedSupabaseClient;
+  // Everything is handled in the try/catch block above
+  // This unreachable code is only kept to satisfy TypeScript
+  throw new Error('Unreachable code');
 }

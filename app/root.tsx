@@ -102,17 +102,50 @@ export const Head = createHead(() => (
   </>
 ));
 
+// Create error boundary for the entire app to catch and handle errors gracefully
+export function ErrorBoundary() {
+  // Completely isolated from loader data - uses no hooks that might fail
+  console.log('[ERROR BOUNDARY] Rendering error boundary');
+  return (
+    <html lang="en" data-theme="light">
+      <head>
+        <meta charSet="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <title>MCG - My Career Growth</title>
+        <Meta />
+        <Links />
+      </head>
+      <body>
+        <div className="w-full h-full flex items-center justify-center p-8">
+          <div className="max-w-md p-6 bg-white rounded-lg shadow-md">
+            <h1 className="text-2xl font-bold mb-4 text-red-600">Application Error</h1>
+            <p className="mb-4">The application encountered an unexpected error.</p>
+            <button 
+              onClick={() => window.location.href = '/'}
+              className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+            >
+              Return Home
+            </button>
+          </div>
+        </div>
+        <Scripts />
+      </body>
+    </html>
+  );
+}
+
 export function Layout({ children }: { children: React.ReactNode }) {
-  // COMPLETELY fallback-safe access to ENV variables
+  // COMPLETELY fallback-safe access to ENV variables that also works in error boundaries
   let ENV = {};
+  
   try {
     // First attempt to get from loader data
     const loaderData = useLoaderData<typeof loader>();
     ENV = loaderData?.ENV || {};
     console.log('[ROOT LAYOUT] Successfully loaded ENV from loader data:', !!ENV);
   } catch (error) {
-    // If that fails for any reason, provide empty defaults
-    console.error('[ROOT LAYOUT] Error accessing loader data:', error);
+    // If that fails, we're likely in an error boundary, so provide defaults
+    console.error('[ROOT LAYOUT] Error accessing loader data - likely in error boundary');
     ENV = {};
   }
   
