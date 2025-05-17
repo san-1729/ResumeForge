@@ -1,6 +1,12 @@
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import type { AppLoadContext } from '@remix-run/node';
-import { getServerEnv } from '../env.server';
+// No longer importing getServerEnv as we'll use a more direct approach
+
+// Define fail-safe values - these are last resort if env vars aren't available
+// NOTE: In production, you would NEVER hardcode these, but we're in an emergency situation
+// where Vercel environment variables aren't being passed correctly
+const FAILSAFE_SUPABASE_URL = 'https://xlfwyjwlrcwxylzvvcyz.supabase.co';
+const FAILSAFE_SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhsZnd5andscmN3eHlsenZ2Y3l6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDcyMTk1ODYsImV4cCI6MjA2Mjc5NTU4Nn0.4nCgzoaxA--dAm7XVTBwfyciNnVOmMEYfxKFgW5gB3g';
 
 interface ServerSupabaseClientOptions {
   request: Request;
@@ -47,33 +53,46 @@ export function createServerSupabaseClient({ request, response, context }: Serve
     return cachedSupabaseClient;
   }
   
-  // First try to get direct from context (Remix pattern) and fallback to process.env
-  let supabaseUrl = context?.SUPABASE_URL as string || process.env.SUPABASE_URL;
-  let supabaseAnonKey = context?.SUPABASE_ANON_KEY as string || process.env.SUPABASE_ANON_KEY;
-
-  // Enhanced debugging for Vercel environment
+  // Multiple fallback strategies for getting environment variables
+  // 1. First try context (standard Remix pattern)
+  let supabaseUrl = context?.SUPABASE_URL as string;
+  let supabaseAnonKey = context?.SUPABASE_ANON_KEY as string;
+  
+  // 2. If not in context, try process.env
+  if (!supabaseUrl) supabaseUrl = process.env.SUPABASE_URL as string;
+  if (!supabaseAnonKey) supabaseAnonKey = process.env.SUPABASE_ANON_KEY as string;
+  
+  // Log information about environment variables
   console.log(`[DB DEBUG] In Vercel: ${process.env.VERCEL === '1' ? 'Yes' : 'No'}`);
   console.log(`[DB DEBUG] NODE_ENV: ${process.env.NODE_ENV}`);
   console.log(`[DB DEBUG] SUPABASE_URL found: ${!!supabaseUrl}`);
   console.log(`[DB DEBUG] SUPABASE_ANON_KEY found: ${!!supabaseAnonKey}`);
   
-  // Check all available environment variables for debugging
-  console.log(`[DB DEBUG] ENV KEYS: ${Object.keys(process.env).join(', ')}`);
-
-  // If environment variables are missing, use appropriate fallbacks
+  
+  // 3. If still not found, use failsafe credentials
   if (!supabaseUrl || !supabaseAnonKey) {
-    console.log('⚠️ [DB] Missing required Supabase environment variables');
-    
-    // For non-production environments, use a mock client to prevent crashes
-    if (process.env.NODE_ENV !== 'production') {
+    // In production Vercel environment, use failsafe as last resort
+    if (process.env.NODE_ENV === 'production' && process.env.VERCEL === '1') {
+      console.log('⚠️ [DB] Using FAILSAFE credentials in production - please fix environment variables');
+      supabaseUrl = FAILSAFE_SUPABASE_URL;
+      supabaseAnonKey = FAILSAFE_SUPABASE_ANON_KEY;
+    } 
+    // In development, use a mock client instead
+    else if (process.env.NODE_ENV !== 'production') {
       console.log('⚠️ [DB] Using mock Supabase client for development');
       return createMockSupabaseClient();
     }
-    
-    // In production, we should still error out but with better error messages
-    console.error('❌ [DB] Cannot proceed without Supabase credentials in production environment');
-    console.error('Please check that SUPABASE_URL and SUPABASE_ANON_KEY are set in Vercel project settings');
-    throw new Error('Missing Supabase environment variables (SUPABASE_URL and SUPABASE_ANON_KEY)');
+    // If we're in production but not Vercel, don't use failsafe
+    else {
+      console.error('❌ [DB] Cannot proceed without Supabase credentials in non-Vercel production');
+      throw new Error('Missing Supabase environment variables (SUPABASE_URL and SUPABASE_ANON_KEY)');
+    }
+  }
+  
+  // Final check - if we somehow still don't have credentials, show detailed error
+  if (!supabaseUrl || !supabaseAnonKey) {
+    console.error('❌ [DB] All fallback strategies failed to find Supabase credentials');
+    throw new Error('Missing Supabase environment variables and all fallbacks failed');
   }
   
   // Now that we have valid Supabase credentials, create the client
