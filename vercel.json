@@ -1,5 +1,5 @@
 {
-  "buildCommand": "pnpm run build",
+  "buildCommand": "rm -rf .vercel/output && pnpm run build",
   "devCommand": "pnpm run dev",
   "installCommand": "pnpm install",
   "framework": "remix",
@@ -12,7 +12,8 @@
   },
   "env": {
     "NODE_ENV": "production",
-    "REMIX_ENTRY_SERVER_PATH": "./entry.server.node.tsx"
+    "REMIX_ENTRY_SERVER_PATH": "./entry.server.tsx",
+    "VERCEL_FORCE_NO_BUILD_CACHE": "1"
   },
   "headers": [
     {
