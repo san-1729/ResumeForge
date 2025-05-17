@@ -1,13 +1,15 @@
 /**
  * This is a specialized server entry point for Node.js environments (Vercel)
+ * Using CommonJS-compatible imports to ensure it works in Node.js serverless environment
  */
 import { PassThrough } from 'node:stream';
 import { createReadableStreamFromReadable } from '@remix-run/node';
 import type { AppLoadContext, EntryContext } from '@remix-run/node';
 import { RemixServer } from '@remix-run/react';
 import { isbot } from 'isbot';
-// Import the entire module and use renderToPipeableStream which is guaranteed to exist
-import * as ReactDOMServer from 'react-dom/server';
+// IMPORTANT: Use default import and destructuring for CommonJS compatibility
+import ReactDOMServer from 'react-dom/server';
+const { renderToPipeableStream } = ReactDOMServer;
 import { renderHeadToString } from 'remix-island';
 import { Head } from './root';
 
