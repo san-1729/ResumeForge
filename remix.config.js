@@ -6,6 +6,8 @@ export default {
   // When running in Vercel, we need to use the Vercel adapter
   serverModuleFormat: "cjs",
   serverPlatform: process.env.VERCEL ? "node" : "cloudflare",
+  // Explicitly set the server entry for each platform so Remix bundles the correct file
+  server: process.env.VERCEL ? "./app/entry.server.node.tsx" : "./app/entry.server.tsx",
   // Use the Vercel adapter when deploying to Vercel
   serverDependenciesToBundle: [
     // Bundle all dependencies for Cloudflare deployment
