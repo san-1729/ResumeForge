@@ -91,7 +91,7 @@ importers:
         version: 2.10.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@5.5.2)
       '@supabase/supabase-js':
         specifier: ^2.49.4
-        version: 2.49.4
+        version: 2.49.4(bufferutil@4.0.9)(utf-8-validate@6.0.5)
       '@types/three':
         specifier: ^0.176.0
         version: 0.176.0
@@ -185,6 +185,13 @@ importers:
       unist-util-visit:
         specifier: ^5.0.0
         version: 5.0.0
+    optionalDependencies:
+      bufferutil:
+        specifier: ^4.0.8
+        version: 4.0.9
+      utf-8-validate:
+        specifier: ^6.0.3
+        version: 6.0.5
     devDependencies:
       '@blitz/eslint-plugin':
         specifier: 0.1.0
@@ -194,7 +201,7 @@ importers:
         version: 4.20240620.0
       '@remix-run/dev':
         specifier: ^2.10.0
-        version: 2.10.0(@remix-run/react@2.10.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@5.5.2))(@remix-run/serve@2.10.0(typescript@5.5.2))(@types/node@22.15.17)(sass@1.77.6)(ts-node@10.9.2(@types/node@22.15.17)(typescript@5.5.2))(typescript@5.5.2)(vite@5.3.1(@types/node@22.15.17)(sass@1.77.6))(wrangler@3.63.2(@cloudflare/workers-types@4.20240620.0))
+        version: 2.10.0(@remix-run/react@2.10.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@5.5.2))(@remix-run/serve@2.10.0(typescript@5.5.2))(@types/node@22.15.17)(bufferutil@4.0.9)(sass@1.77.6)(ts-node@10.9.2(@types/node@22.15.17)(typescript@5.5.2))(typescript@5.5.2)(utf-8-validate@6.0.5)(vite@5.3.1(@types/node@22.15.17)(sass@1.77.6))(wrangler@3.63.2(@cloudflare/workers-types@4.20240620.0)(bufferutil@4.0.9)(utf-8-validate@6.0.5))
       '@types/diff':
         specifier: ^5.2.1
         version: 5.2.1
@@ -209,7 +216,7 @@ importers:
         version: 18.3.0
       '@vercel/remix':
         specifier: ^2.10.0
-        version: 2.16.6(@remix-run/dev@2.10.0(@remix-run/react@2.10.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@5.5.2))(@remix-run/serve@2.10.0(typescript@5.5.2))(@types/node@22.15.17)(sass@1.77.6)(ts-node@10.9.2(@types/node@22.15.17)(typescript@5.5.2))(typescript@5.5.2)(vite@5.3.1(@types/node@22.15.17)(sass@1.77.6))(wrangler@3.63.2(@cloudflare/workers-types@4.20240620.0)))(@remix-run/node@2.10.2(typescript@5.5.2))(@remix-run/server-runtime@2.10.2(typescript@5.5.2))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+        version: 2.16.6(@remix-run/dev@2.10.0(@remix-run/react@2.10.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@5.5.2))(@remix-run/serve@2.10.0(typescript@5.5.2))(@types/node@22.15.17)(bufferutil@4.0.9)(sass@1.77.6)(ts-node@10.9.2(@types/node@22.15.17)(typescript@5.5.2))(typescript@5.5.2)(utf-8-validate@6.0.5)(vite@5.3.1(@types/node@22.15.17)(sass@1.77.6))(wrangler@3.63.2(@cloudflare/workers-types@4.20240620.0)(bufferutil@4.0.9)(utf-8-validate@6.0.5)))(@remix-run/node@2.10.2(typescript@5.5.2))(@remix-run/server-runtime@2.10.2(typescript@5.5.2))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       drizzle-kit:
         specifier: ^0.31.1
         version: 0.31.1
@@ -263,7 +270,7 @@ importers:
         version: 2.0.1(@types/node@22.15.17)(sass@1.77.6)
       wrangler:
         specifier: ^3.63.2
-        version: 3.63.2(@cloudflare/workers-types@4.20240620.0)
+        version: 3.63.2(@cloudflare/workers-types@4.20240620.0)(bufferutil@4.0.9)(utf-8-validate@6.0.5)
       zod:
         specifier: ^3.23.8
         version: 3.23.8
@@ -2613,6 +2620,10 @@ packages:
   buffer@5.7.1:
     resolution: {integrity: sha512-EHcyIPBQ4BSGlvjB16k5KgAJ27CIsHY/2JBmCRReo48y9rQ3MaUzWX3KVlBa4U7MyX02HdVj0K7C3WaB3ju7FQ==}
 
+  bufferutil@4.0.9:
+    resolution: {integrity: sha512-WDtdLmJvAuNNPzByAYpRo2rF1Mmradw6gvWsQKf63476DDXmomT9zUiGypLcG4ibIM67vhAj8jJRdbmEws2Aqw==}
+    engines: {node: '>=6.14.2'}
+
   builtin-status-codes@3.0.0:
     resolution: {integrity: sha512-HpGFw18DgFWlncDfjTa2rcQ4W88O1mC8e8yZ2AvQY5KDaktSTwo+KRf6nHK6FRI5FyRyb/5T6+TSxfP7QyGsmQ==}
 
@@ -4407,6 +4418,10 @@ packages:
     resolution: {integrity: sha512-dPEtOeMvF9VMcYV/1Wb8CPoVAXtp6MKMlcbAt4ddqmGqUJ6fQZFXkNZNkNlfevtNkGtaSoXf/vNNNSvgrdXwtA==}
     engines: {node: '>= 6.13.0'}
 
+  node-gyp-build@4.8.4:
+    resolution: {integrity: sha512-LA4ZjwlnUblHVgq0oBF3Jl/6h/Nvs5fzBLwdEF4nuxnFdsfajde4WfxtJr3CaiH+F6ewcIB/q4jQ4UzPyid+CQ==}
+    hasBin: true
+
   node-releases@2.0.14:
     resolution: {integrity: sha512-y10wOWt8yZpqXmOgRo77WaHEmhYQYGNA6y421PKsKYWEK8aW+cqAphborZDhqfyKrbZEN92CN1X2KbafY2s7Yw==}
 
@@ -5625,6 +5640,10 @@ packages:
     resolution: {integrity: sha512-PElTlVMwpblvbNqQ82d2n6RjStvdSoNe9FG28kNfz3WiXilJm4DdNkEzRhCZuIDwY8U08WVihhGR5iRqAwfDiw==}
     peerDependencies:
       react: ^16.8.0 || ^17.0.0 || ^18.0.0
+
+  utf-8-validate@6.0.5:
+    resolution: {integrity: sha512-EYZR+OpIXp9Y1eG1iueg8KRsY8TuT8VNgnanZ0uA3STqhHQTLwbl+WX76/9X5OY12yQubymBpaBSmMPkSTQcKA==}
+    engines: {node: '>=6.14.2'}
 
   util-deprecate@1.0.2:
     resolution: {integrity: sha512-EPD5q1uXyFxJpCrLnCc1nHnq3gOa6DZBocAIiI2TaSCA7VCJ1UJDMagCzIkXNsUYfD1daK//LTEQ8xiIbrHtcw==}
@@ -7280,7 +7299,7 @@ snapshots:
     optionalDependencies:
       typescript: 5.5.2
 
-  '@remix-run/dev@2.10.0(@remix-run/react@2.10.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@5.5.2))(@remix-run/serve@2.10.0(typescript@5.5.2))(@types/node@22.15.17)(sass@1.77.6)(ts-node@10.9.2(@types/node@22.15.17)(typescript@5.5.2))(typescript@5.5.2)(vite@5.3.1(@types/node@22.15.17)(sass@1.77.6))(wrangler@3.63.2(@cloudflare/workers-types@4.20240620.0))':
+  '@remix-run/dev@2.10.0(@remix-run/react@2.10.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@5.5.2))(@remix-run/serve@2.10.0(typescript@5.5.2))(@types/node@22.15.17)(bufferutil@4.0.9)(sass@1.77.6)(ts-node@10.9.2(@types/node@22.15.17)(typescript@5.5.2))(typescript@5.5.2)(utf-8-validate@6.0.5)(vite@5.3.1(@types/node@22.15.17)(sass@1.77.6))(wrangler@3.63.2(@cloudflare/workers-types@4.20240620.0)(bufferutil@4.0.9)(utf-8-validate@6.0.5))':
     dependencies:
       '@babel/core': 7.24.7
       '@babel/generator': 7.24.7
@@ -7335,12 +7354,12 @@ snapshots:
       set-cookie-parser: 2.6.0
       tar-fs: 2.1.1
       tsconfig-paths: 4.2.0
-      ws: 7.5.10
+      ws: 7.5.10(bufferutil@4.0.9)(utf-8-validate@6.0.5)
     optionalDependencies:
       '@remix-run/serve': 2.10.0(typescript@5.5.2)
       typescript: 5.5.2
       vite: 5.3.1(@types/node@22.15.17)(sass@1.77.6)
-      wrangler: 3.63.2(@cloudflare/workers-types@4.20240620.0)
+      wrangler: 3.63.2(@cloudflare/workers-types@4.20240620.0)(bufferutil@4.0.9)(utf-8-validate@6.0.5)
     transitivePeerDependencies:
       - '@types/node'
       - babel-plugin-macros
@@ -7573,12 +7592,12 @@ snapshots:
     dependencies:
       '@supabase/node-fetch': 2.6.15
 
-  '@supabase/realtime-js@2.11.2':
+  '@supabase/realtime-js@2.11.2(bufferutil@4.0.9)(utf-8-validate@6.0.5)':
     dependencies:
       '@supabase/node-fetch': 2.6.15
       '@types/phoenix': 1.6.6
       '@types/ws': 8.18.1
-      ws: 8.18.0
+      ws: 8.18.0(bufferutil@4.0.9)(utf-8-validate@6.0.5)
     transitivePeerDependencies:
       - bufferutil
       - utf-8-validate
@@ -7587,13 +7606,13 @@ snapshots:
     dependencies:
       '@supabase/node-fetch': 2.6.15
 
-  '@supabase/supabase-js@2.49.4':
+  '@supabase/supabase-js@2.49.4(bufferutil@4.0.9)(utf-8-validate@6.0.5)':
     dependencies:
       '@supabase/auth-js': 2.69.1
       '@supabase/functions-js': 2.4.4
       '@supabase/node-fetch': 2.6.15
       '@supabase/postgrest-js': 1.19.4
-      '@supabase/realtime-js': 2.11.2
+      '@supabase/realtime-js': 2.11.2(bufferutil@4.0.9)(utf-8-validate@6.0.5)
       '@supabase/storage-js': 2.7.1
     transitivePeerDependencies:
       - bufferutil
@@ -8006,9 +8025,9 @@ snapshots:
 
   '@vanilla-extract/private@1.0.5': {}
 
-  '@vercel/remix@2.16.6(@remix-run/dev@2.10.0(@remix-run/react@2.10.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@5.5.2))(@remix-run/serve@2.10.0(typescript@5.5.2))(@types/node@22.15.17)(sass@1.77.6)(ts-node@10.9.2(@types/node@22.15.17)(typescript@5.5.2))(typescript@5.5.2)(vite@5.3.1(@types/node@22.15.17)(sass@1.77.6))(wrangler@3.63.2(@cloudflare/workers-types@4.20240620.0)))(@remix-run/node@2.10.2(typescript@5.5.2))(@remix-run/server-runtime@2.10.2(typescript@5.5.2))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)':
+  '@vercel/remix@2.16.6(@remix-run/dev@2.10.0(@remix-run/react@2.10.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@5.5.2))(@remix-run/serve@2.10.0(typescript@5.5.2))(@types/node@22.15.17)(bufferutil@4.0.9)(sass@1.77.6)(ts-node@10.9.2(@types/node@22.15.17)(typescript@5.5.2))(typescript@5.5.2)(utf-8-validate@6.0.5)(vite@5.3.1(@types/node@22.15.17)(sass@1.77.6))(wrangler@3.63.2(@cloudflare/workers-types@4.20240620.0)(bufferutil@4.0.9)(utf-8-validate@6.0.5)))(@remix-run/node@2.10.2(typescript@5.5.2))(@remix-run/server-runtime@2.10.2(typescript@5.5.2))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)':
     dependencies:
-      '@remix-run/dev': 2.10.0(@remix-run/react@2.10.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@5.5.2))(@remix-run/serve@2.10.0(typescript@5.5.2))(@types/node@22.15.17)(sass@1.77.6)(ts-node@10.9.2(@types/node@22.15.17)(typescript@5.5.2))(typescript@5.5.2)(vite@5.3.1(@types/node@22.15.17)(sass@1.77.6))(wrangler@3.63.2(@cloudflare/workers-types@4.20240620.0))
+      '@remix-run/dev': 2.10.0(@remix-run/react@2.10.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@5.5.2))(@remix-run/serve@2.10.0(typescript@5.5.2))(@types/node@22.15.17)(bufferutil@4.0.9)(sass@1.77.6)(ts-node@10.9.2(@types/node@22.15.17)(typescript@5.5.2))(typescript@5.5.2)(utf-8-validate@6.0.5)(vite@5.3.1(@types/node@22.15.17)(sass@1.77.6))(wrangler@3.63.2(@cloudflare/workers-types@4.20240620.0)(bufferutil@4.0.9)(utf-8-validate@6.0.5))
       '@remix-run/node': 2.10.2(typescript@5.5.2)
       '@remix-run/server-runtime': 2.10.2(typescript@5.5.2)
       '@vercel/static-config': 3.0.0
@@ -8394,6 +8413,11 @@ snapshots:
     dependencies:
       base64-js: 1.5.1
       ieee754: 1.2.1
+
+  bufferutil@4.0.9:
+    dependencies:
+      node-gyp-build: 4.8.4
+    optional: true
 
   builtin-status-codes@3.0.0: {}
 
@@ -10523,7 +10547,7 @@ snapshots:
 
   mimic-fn@4.0.0: {}
 
-  miniflare@3.20240701.0:
+  miniflare@3.20240701.0(bufferutil@4.0.9)(utf-8-validate@6.0.5):
     dependencies:
       '@cspotcode/source-map-support': 0.8.1
       acorn: 8.12.0
@@ -10534,7 +10558,7 @@ snapshots:
       stoppable: 1.1.0
       undici: 5.28.4
       workerd: 1.20240701.0
-      ws: 8.18.0
+      ws: 8.18.0(bufferutil@4.0.9)(utf-8-validate@6.0.5)
       youch: 3.3.3
       zod: 3.23.8
     transitivePeerDependencies:
@@ -10646,6 +10670,9 @@ snapshots:
       formdata-polyfill: 4.0.10
 
   node-forge@1.3.1: {}
+
+  node-gyp-build@4.8.4:
+    optional: true
 
   node-releases@2.0.14: {}
 
@@ -12006,6 +12033,11 @@ snapshots:
     dependencies:
       react: 18.3.1
 
+  utf-8-validate@6.0.5:
+    dependencies:
+      node-gyp-build: 4.8.4
+    optional: true
+
   util-deprecate@1.0.2: {}
 
   util@0.12.5:
@@ -12230,7 +12262,7 @@ snapshots:
       '@cloudflare/workerd-linux-arm64': 1.20240701.0
       '@cloudflare/workerd-windows-64': 1.20240701.0
 
-  wrangler@3.63.2(@cloudflare/workers-types@4.20240620.0):
+  wrangler@3.63.2(@cloudflare/workers-types@4.20240620.0)(bufferutil@4.0.9)(utf-8-validate@6.0.5):
     dependencies:
       '@cloudflare/kv-asset-handler': 0.3.4
       '@esbuild-plugins/node-globals-polyfill': 0.2.3(esbuild@0.17.19)
@@ -12239,7 +12271,7 @@ snapshots:
       chokidar: 3.6.0
       date-fns: 3.6.0
       esbuild: 0.17.19
-      miniflare: 3.20240701.0
+      miniflare: 3.20240701.0(bufferutil@4.0.9)(utf-8-validate@6.0.5)
       nanoid: 3.3.7
       path-to-regexp: 6.2.2
       resolve: 1.22.8
@@ -12275,9 +12307,15 @@ snapshots:
       imurmurhash: 0.1.4
       signal-exit: 4.1.0
 
-  ws@7.5.10: {}
+  ws@7.5.10(bufferutil@4.0.9)(utf-8-validate@6.0.5):
+    optionalDependencies:
+      bufferutil: 4.0.9
+      utf-8-validate: 6.0.5
 
-  ws@8.18.0: {}
+  ws@8.18.0(bufferutil@4.0.9)(utf-8-validate@6.0.5):
+    optionalDependencies:
+      bufferutil: 4.0.9
+      utf-8-validate: 6.0.5
 
   xtend@4.0.2: {}
 
