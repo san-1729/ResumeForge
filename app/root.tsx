@@ -8,6 +8,7 @@ import { stripIndents } from './utils/stripIndent';
 import { createHead } from 'remix-island';
 import { useEffect } from 'react';
 import { json } from '@remix-run/node';
+import { getClientEnv } from './lib/env.server';
 import { ClientOnly } from 'remix-utils/client-only';
 import AuthProvider from './components/auth/AuthProvider.client';
 // Debug components removed
@@ -21,34 +22,19 @@ import xtermStyles from '@xterm/xterm/css/xterm.css?url';
 // UnoCSS is disabled for Vercel compatibility
 // import 'virtual:uno.css';
 
-// Pass environment variables to the client
+// Pass environment variables to the client using our centralized env utility
 export async function loader({ request }: LoaderFunctionArgs) {
+  // Get environment variables through our utility
+  const clientEnv = getClientEnv();
+  
   // Enhanced logging for debugging environment variables
-  console.log('ROOT LOADER - Environment Variables Status:');
-  console.log('NODE_ENV:', process.env.NODE_ENV);
-  console.log('VERCEL:', process.env.VERCEL);
-  console.log('VERCEL_ENV:', process.env.VERCEL_ENV);
-  console.log('All available env vars:', Object.keys(process.env).join(', '));
-  console.log('SUPABASE_URL exists:', !!process.env.SUPABASE_URL);
-  console.log('SUPABASE_ANON_KEY exists:', !!process.env.SUPABASE_ANON_KEY);
-  console.log('Request URL:', request.url);
-
-  // On Vercel, log what is available in the global namespace
-  if (process.env.VERCEL) {
-    console.log('Running on Vercel - checking global namespace');
-    try {
-      // @ts-ignore - checking if variables exist in global scope
-      console.log('SUPABASE_URL in global:', typeof SUPABASE_URL !== 'undefined');
-    } catch (e: any) {
-      console.log('Error checking global namespace:', e?.message || 'Unknown error');
-    }
-  }
+  console.log('ROOT LOADER - Using centralized env utility');
+  console.log('ROOT LOADER - Request URL:', request.url);
+  console.log('ROOT LOADER - SUPABASE_URL exists:', !!clientEnv.SUPABASE_URL);
+  console.log('ROOT LOADER - SUPABASE_ANON_KEY exists:', !!clientEnv.SUPABASE_ANON_KEY);
 
   return json({
-    ENV: {
-      SUPABASE_URL: process.env.SUPABASE_URL,
-      SUPABASE_ANON_KEY: process.env.SUPABASE_ANON_KEY
-    }
+    ENV: clientEnv
   });
 }
 
